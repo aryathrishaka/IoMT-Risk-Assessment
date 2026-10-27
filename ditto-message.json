@@ -1,0 +1,6 @@
+﻿{
+  "topic": "iomt/device1/things/twin/commands/modify",
+  "headers": {},
+  "path": "/attributes/temperature",
+  "value": 36.8
+}

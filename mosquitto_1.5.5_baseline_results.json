@@ -1,0 +1,554 @@
+[
+  {
+    "component": "Mosquitto",
+    "version": "1.5.5",
+    "primary_scale": "CVSS v3.x",
+    "candidates": 35,
+    "affected": [
+      {
+        "cve_id": "CVE-2024-10525",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 9.8,
+            "severity": "CRITICAL",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "4.0",
+              "score": 7.2,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 9.8,
+              "severity": "CRITICAL",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "4.0",
+              "score": 7.2,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:H/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "In Eclipse Mosquitto, from version 1.3.2 through 2.0.18, if a malicious broker sends a crafted SUBACK packet with no reason codes, a client using libmosquitto may make out of bounds memory access when"
+      },
+      {
+        "cve_id": "CVE-2018-12550",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.0",
+            "score": 8.1,
+            "severity": "HIGH",
+            "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "2.0",
+              "score": 6.8,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.0",
+              "score": 8.1,
+              "severity": "HIGH",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "2.0",
+              "score": 6.8,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "When Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) is configured to use an ACL file, and that ACL file is empty, or contains only comments or blank lines, then Mosquitto will treat this as though"
+      },
+      {
+        "cve_id": "CVE-2018-12551",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.0",
+            "score": 8.1,
+            "severity": "HIGH",
+            "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "2.0",
+              "score": 6.8,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.0",
+              "score": 8.1,
+              "severity": "HIGH",
+              "vector": "CVSS:3.0/AV:N/AC:H/PR:N/UI:N/S:U/C:H/I:H/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "2.0",
+              "score": 6.8,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:M/Au:N/C:P/I:P/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "When Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) is configured to use a password file for authentication, any malformed data in the password file will be treated as valid. This typically means "
+      },
+      {
+        "cve_id": "CVE-2021-34432",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 7.5,
+            "severity": "HIGH",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "2.0",
+              "score": 5.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "2.0",
+              "score": 5.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:N/C:N/I:N/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "In Eclipse Mosquitto versions 2.0.7 and earlier, the server will crash if the client tries to send a PUBLISH packet with topic length = 0."
+      },
+      {
+        "cve_id": "CVE-2023-28366",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 7.5,
+            "severity": "HIGH",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Secondary",
+              "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Secondary",
+              "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0"
+            }
+          ]
+        },
+        "description": "The broker in Eclipse Mosquitto 1.3.2 through 2.x before 2.0.16 has a memory leak that can be abused remotely when a client sends many QoS 2 messages with duplicate message IDs, and fails to respond t"
+      },
+      {
+        "cve_id": "CVE-2023-3592",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 7.5,
+            "severity": "HIGH",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "3.1",
+              "score": 5.8,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:L",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 5.8,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:L",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            },
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "In Mosquitto before 2.0.16, a memory leak occurs when clients send v5 CONNECT packets with a will message that contains invalid property types."
+      },
+      {
+        "cve_id": "CVE-2024-8376",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 7.5,
+            "severity": "HIGH",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "4.0",
+              "score": 7.2,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:L/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 7.5,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "4.0",
+              "score": 7.2,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:H/VI:L/VA:H/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "In Eclipse Mosquitto up to version 2.0.18a, an attacker can achieve memory leaking, segmentation fault or heap-use-after-free by sending specific sequences of \"CONNECT\", \"DISCONNECT\", \"SUBSCRIBE\", \"UN"
+      },
+      {
+        "cve_id": "CVE-2018-12546",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 6.5,
+            "severity": "MEDIUM",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "2.0",
+              "score": 4.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "2.0",
+              "score": 4.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "In Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) when a client publishes a retained message to a topic, then has its access to that topic revoked, the retained message will still be published to "
+      },
+      {
+        "cve_id": "CVE-2019-11779",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 6.5,
+            "severity": "MEDIUM",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "2.0",
+              "score": 4.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:S/C:N/I:N/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:H",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            {
+              "version": "2.0",
+              "score": 4.0,
+              "severity": "MEDIUM",
+              "vector": "AV:N/AC:L/Au:S/C:N/I:N/A:P",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "In Eclipse Mosquitto 1.5.0 to 1.6.5 inclusive, if a malicious MQTT client sends a SUBSCRIBE packet containing a topic that consists of approximately 65400 or more '/' characters, i.e. the topic hierar"
+      },
+      {
+        "cve_id": "CVE-2023-0809",
+        "status": "AFFECTED",
+        "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 5.3,
+            "severity": "MEDIUM",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+            "source_type": "Primary",
+            "source": "nvd@nist.gov"
+          },
+          "other": [
+            {
+              "version": "3.1",
+              "score": 5.8,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:L",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 5.8,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:C/C:N/I:N/A:L",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            },
+            {
+              "version": "3.1",
+              "score": 5.3,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:N/I:N/A:L",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            }
+          ]
+        },
+        "description": "In Mosquitto before 2.0.16, excessive memory is allocated based on malicious initial packets that are not CONNECT packets."
+      }
+    ],
+    "affected_other_scale": [],
+    "unknown": [
+      {
+        "cve_id": "CVE-2026-71960",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 9.1,
+            "severity": "CRITICAL",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+            "source_type": "Secondary",
+            "source": "disclosure@vulncheck.com"
+          },
+          "other": [
+            {
+              "version": "4.0",
+              "score": 9.3,
+              "severity": "CRITICAL",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "disclosure@vulncheck.com"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 9.1,
+              "severity": "CRITICAL",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:N",
+              "source_type": "Secondary",
+              "source": "disclosure@vulncheck.com"
+            },
+            {
+              "version": "4.0",
+              "score": 9.3,
+              "severity": "CRITICAL",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "disclosure@vulncheck.com"
+            }
+          ]
+        },
+        "description": "Cudy WR3000 2.0 running firmware before 2.5.24 contains a hard-coded JWT HMAC signing secret vulnerability in the Mosquitto MQTT broker's authentication plugin that allows unauthenticated attackers to"
+      },
+      {
+        "cve_id": "CVE-2026-73669",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 7.3,
+            "severity": "HIGH",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+            "source_type": "Secondary",
+            "source": "9119a7d8-5eab-497f-8521-727c672e3725"
+          },
+          "other": [
+            {
+              "version": "4.0",
+              "score": 6.9,
+              "severity": "MEDIUM",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "9119a7d8-5eab-497f-8521-727c672e3725"
+            }
+          ],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 7.3,
+              "severity": "HIGH",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:L/I:L/A:L",
+              "source_type": "Secondary",
+              "source": "9119a7d8-5eab-497f-8521-727c672e3725"
+            },
+            {
+              "version": "4.0",
+              "score": 6.9,
+              "severity": "MEDIUM",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:L/VI:L/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "9119a7d8-5eab-497f-8521-727c672e3725"
+            }
+          ]
+        },
+        "description": "The Signify Philips Hue Bridge Pro firmware embeds a Mosquitto MQTT broker service that listens on all network interfaces without authentication. An unauthenticated attacker with network access to the"
+      }
+    ],
+    "not_affected_count": 23
+  }
+]

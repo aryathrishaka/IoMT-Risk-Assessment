@@ -1,0 +1,41 @@
+﻿# Python
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environments
+venv/
+.venv/
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+secrets.json
+*credentials*
+vulnerable-ditto-connection.json
+
+# Local logs
+*.log
+nvd_output.txt
+
+# Test and coverage caches
+.pytest_cache/
+.coverage
+htmlcov/
+
+# IDE and operating system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Mosquitto authentication files
+mosquitto-control/passwd
+
+# Backup files
+main_backup.py
+
+# Local environment and temporary files
+*.tmp
+*.bak

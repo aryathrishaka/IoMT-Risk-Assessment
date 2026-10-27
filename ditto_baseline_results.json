@@ -1,0 +1,133 @@
+[
+  {
+    "component": "Eclipse Ditto",
+    "version": "3.9.7",
+    "primary_scale": "CVSS v3.x",
+    "candidates": 11,
+    "affected": [],
+    "affected_other_scale": [],
+    "unknown": [
+      {
+        "cve_id": "CVE-2026-84197",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": null,
+          "other": [
+            {
+              "version": "4.0",
+              "score": 9.2,
+              "severity": "CRITICAL",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "4.0",
+              "score": 9.2,
+              "severity": "CRITICAL",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:H/VA:L/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "In Eclipse Ditto's Node.js JavaScript client, all released versions of @eclipse-ditto/ditto-javascript-client-node from 2.0.0 to 3.9.0 and of its predecessor package @eclipse-ditto/ditto-javascript-cl"
+      },
+      {
+        "cve_id": "CVE-2026-82958",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": null,
+          "other": [
+            {
+              "version": "4.0",
+              "score": 7.6,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "4.0",
+              "score": 7.6,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:H/VA:N/SC:N/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "In Eclipse Ditto versions [1.3.0, 3.9.6], the ImplicitThingCreationMessageMapper of the connectivity service builds a CreateThing command by substituting placeholder values (e.g. {{ header:device_id }"
+      },
+      {
+        "cve_id": "CVE-2026-107503",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": null,
+          "other": [
+            {
+              "version": "4.0",
+              "score": 7.1,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:L/VA:N/SC:H/SI:H/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "4.0",
+              "score": 7.1,
+              "severity": "HIGH",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:A/VC:H/VI:L/VA:N/SC:H/SI:H/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "Unvalidated environments URL allows OAuth authorization code + PKCE verifier theft and account takeover via injected OIDC authority in Ditto Explorer in Eclipse Ditto Ditto Explorer [3.6.0,3.9.7] allo"
+      },
+      {
+        "cve_id": "CVE-2026-84175",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": null,
+          "other": [
+            {
+              "version": "4.0",
+              "score": 5.3,
+              "severity": "MEDIUM",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:L/SC:L/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ],
+          "all": [
+            {
+              "version": "4.0",
+              "score": 5.3,
+              "severity": "MEDIUM",
+              "vector": "CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:L/VI:N/VA:L/SC:L/SI:N/SA:N/E:X/CR:X/IR:X/AR:X/MAV:X/MAC:X/MAT:X/MPR:X/MUI:X/MVC:X/MVI:X/MVA:X/MSC:X/MSI:X/MSA:X/S:X/AU:X/R:X/V:X/RE:X/U:X",
+              "source_type": "Secondary",
+              "source": "emo@eclipse.org"
+            }
+          ]
+        },
+        "description": "In Eclipse Ditto versions 3.0.0 to 3.9.6, the Things service fetches WoT (Web of Things) ThingModels over HTTP from URLs supplied by API users in the definition field of a Thing or Feature, without va"
+      }
+    ],
+    "not_affected_count": 7
+  }
+]

@@ -1,0 +1,41 @@
+[
+  {
+    "component": "InfluxDB",
+    "version": "2.7.11",
+    "primary_scale": "CVSS v3.x",
+    "candidates": 8,
+    "affected": [],
+    "affected_other_scale": [],
+    "unknown": [
+      {
+        "cve_id": "CVE-2024-30896",
+        "status": "UNKNOWN",
+        "reason": "NVD has no CPE configuration for this CVE (not analysed yet).",
+        "cvss": {
+          "scale": "CVSS v3.x",
+          "primary": {
+            "version": "3.1",
+            "score": 9.1,
+            "severity": "CRITICAL",
+            "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H",
+            "source_type": "Secondary",
+            "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0"
+          },
+          "other": [],
+          "all": [
+            {
+              "version": "3.1",
+              "score": 9.1,
+              "severity": "CRITICAL",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H",
+              "source_type": "Secondary",
+              "source": "134c704f-9b21-4f2e-91b3-4a467353bcc0"
+            }
+          ]
+        },
+        "description": "InfluxDB OSS 2.x through 2.7.11 stores the administrative operator token under the default organization which allows authorized users with read access to the authorization resource of the default orga"
+      }
+    ],
+    "not_affected_count": 7
+  }
+]
