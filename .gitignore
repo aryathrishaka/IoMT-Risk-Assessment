@@ -39,3 +39,5 @@ main_backup.py
 # Local environment and temporary files
 *.tmp
 *.bak
+
+eSensitive*
