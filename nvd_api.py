@@ -1,24 +1,264 @@
 import requests
+import time
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
+
 from packaging.version import Version, InvalidVersion
 from precondition_analyzer import analyze_preconditions
 
 
 NVD_CVE_API = "https://services.nvd.nist.gov/rest/json/cves/2.0"
+NVD_REQUEST_TIMEOUT = 30
+NVD_MAX_ATTEMPTS = 3
+NVD_BACKOFF_SECONDS = 1.0
+NVD_MAX_RETRY_DELAY = 5.0
+NVD_MAX_PAGES = 1000
+
+RETRIEVAL_COMPLETE = "COMPLETE"
+RETRIEVAL_PARTIAL = "PARTIAL"
+RETRIEVAL_FAILED = "FAILED"
+RETRIEVAL_MALFORMED = "MALFORMED"
 
 
 # ---------------------------------------------------------
 # NVD API
 # ---------------------------------------------------------
 
-def search_cves_by_keyword(product_name, results_per_page=100):
+def _retrieval_result(
+    status,
+    items,
+    total_results=None,
+    error=None
+):
+    """Return the small retrieval-status contract used by the CLI."""
+
+    return {
+        "status": status,
+        "items": items,
+        "received": len(items),
+        "total_results": total_results,
+        "error": error
+    }
+
+
+def _retry_delay(
+    response,
+    attempt,
+    backoff_seconds,
+    max_retry_delay
+):
+    """Calculate a bounded retry delay, honouring Retry-After."""
+
+    retry_after = None
+
+    if response is not None:
+        retry_after = response.headers.get("Retry-After")
+
+    if retry_after:
+        try:
+            delay = float(retry_after)
+        except (TypeError, ValueError):
+            try:
+                retry_time = parsedate_to_datetime(retry_after)
+                if retry_time.tzinfo is None:
+                    retry_time = retry_time.replace(tzinfo=timezone.utc)
+                delay = (
+                    retry_time - datetime.now(timezone.utc)
+                ).total_seconds()
+            except (TypeError, ValueError, OverflowError):
+                delay = backoff_seconds * (2 ** attempt)
+    else:
+        delay = backoff_seconds * (2 ** attempt)
+
+    return max(0.0, min(delay, max_retry_delay))
+
+
+def _new_nvd_session():
+    """Create the direct, verified transport used for one NVD retrieval."""
+
+    session = requests.Session()
+    session.trust_env = False
+    session.verify = True
+    return session
+
+
+def _request_nvd_page(
+    session,
+    params,
+    max_attempts,
+    backoff_seconds,
+    max_retry_delay
+):
+    """Fetch one page with bounded handling of transient failures."""
+
+    last_error = None
+
+    for attempt in range(max_attempts):
+
+        response = None
+
+        try:
+
+            response = session.get(
+                NVD_CVE_API,
+                params=params,
+                timeout=NVD_REQUEST_TIMEOUT,
+                verify=True
+            )
+
+            response.raise_for_status()
+
+            return response, None
+
+        except requests.HTTPError as error:
+
+            status_code = (
+                response.status_code
+                if response is not None
+                else None
+            )
+
+            last_error = (
+                f"HTTP {status_code}: {error}"
+                if status_code is not None
+                else f"HTTP error: {error}"
+            )
+
+            retryable = (
+                status_code == 429
+                or (
+                    status_code is not None
+                    and 500 <= status_code <= 599
+                )
+            )
+
+            if not retryable or attempt + 1 >= max_attempts:
+                return None, last_error
+
+        except (
+            requests.Timeout,
+            requests.ConnectionError
+        ) as error:
+
+            last_error = (
+                f"{type(error).__name__}: {error}"
+            )
+
+            if attempt + 1 >= max_attempts:
+                return None, last_error
+
+        except requests.RequestException as error:
+
+            return None, (
+                f"{type(error).__name__}: {error}"
+            )
+
+        time.sleep(
+            _retry_delay(
+                response,
+                attempt,
+                backoff_seconds,
+                max_retry_delay
+            )
+        )
+
+    return None, last_error or "NVD request failed."
+
+
+def _valid_cve_id(item):
+    """Return the CVE ID for a minimally valid NVD record."""
+
+    if not isinstance(item, dict):
+        return None
+
+    cve = item.get("cve")
+
+    if not isinstance(cve, dict):
+        return None
+
+    cve_id = cve.get("id")
+
+    if not isinstance(cve_id, str) or not cve_id.strip():
+        return None
+
+    return cve_id
+
+
+def _invalid_or_partial_result(
+    items,
+    total_results,
+    status_if_empty,
+    error,
+    partial_if_records=True
+):
+    """Retain valid records when a response cannot be processed fully."""
+
+    status = (
+        RETRIEVAL_PARTIAL
+        if items and partial_if_records
+        else status_if_empty
+    )
+
+    return _retrieval_result(
+        status,
+        items,
+        total_results,
+        error
+    )
+
+
+def search_cves_by_keyword_with_status(
+    product_name,
+    results_per_page=100,
+    max_attempts=NVD_MAX_ATTEMPTS,
+    backoff_seconds=NVD_BACKOFF_SECONDS,
+    max_retry_delay=NVD_MAX_RETRY_DELAY
+):
+    """Retrieve NVD CVEs using one dedicated Session with explicit closure."""
+
+    with _new_nvd_session() as session:
+
+        return _search_cves_by_keyword_with_status(
+            session,
+            product_name,
+            results_per_page,
+            max_attempts,
+            backoff_seconds,
+            max_retry_delay
+        )
+
+
+def _search_cves_by_keyword_with_status(
+    session,
+    product_name,
+    results_per_page=100,
+    max_attempts=NVD_MAX_ATTEMPTS,
+    backoff_seconds=NVD_BACKOFF_SECONDS,
+    max_retry_delay=NVD_MAX_RETRY_DELAY
+):
     """
-    Retrieve CVE records from NVD using a product keyword.
+    Retrieve NVD CVEs with explicit completeness and error status.
+
+    The result contains status, items, received, total_results and error.
+    Only unique, minimally valid NVD CVE records are included in items.
     """
 
-    all_results = []
+    if not isinstance(results_per_page, int) or results_per_page <= 0:
+        raise ValueError("results_per_page must be a positive integer.")
+
+    if not isinstance(max_attempts, int) or max_attempts <= 0:
+        raise ValueError("max_attempts must be a positive integer.")
+
+    items = []
+    seen_ids = set()
+    errors = []
+    total_results = None
     start_index = 0
+    pages_requested = 0
 
     while True:
+
+        pages_requested += 1
 
         params = {
             "keywordSearch": product_name,
@@ -26,32 +266,268 @@ def search_cves_by_keyword(product_name, results_per_page=100):
             "startIndex": start_index
         }
 
-        try:
-            response = requests.get(
-                NVD_CVE_API,
-                params=params,
-                timeout=30
+        response, request_error = _request_nvd_page(
+            session,
+            params,
+            max_attempts,
+            backoff_seconds,
+            max_retry_delay
+        )
+
+        if response is None:
+
+            return _invalid_or_partial_result(
+                items,
+                total_results,
+                RETRIEVAL_FAILED,
+                request_error
             )
 
-            response.raise_for_status()
+        try:
 
             data = response.json()
 
-        except requests.RequestException as error:
-            print(f"NVD API error: {error}")
-            return all_results
+        except requests.exceptions.JSONDecodeError as error:
 
-        vulnerabilities = data.get("vulnerabilities", [])
-        total_results = data.get("totalResults", 0)
+            return _invalid_or_partial_result(
+                items,
+                total_results,
+                RETRIEVAL_MALFORMED,
+                f"Invalid JSON from NVD: {error}"
+            )
 
-        all_results.extend(vulnerabilities)
+        if not isinstance(data, dict):
 
-        start_index += len(vulnerabilities)
+            return _invalid_or_partial_result(
+                items,
+                total_results,
+                RETRIEVAL_MALFORMED,
+                "NVD response payload is not a JSON object."
+            )
 
-        if start_index >= total_results or not vulnerabilities:
+        vulnerabilities = data.get("vulnerabilities")
+
+        if not isinstance(vulnerabilities, list):
+
+            return _invalid_or_partial_result(
+                items,
+                total_results,
+                RETRIEVAL_MALFORMED,
+                "NVD response has a missing or invalid vulnerabilities collection."
+            )
+
+        page_errors = []
+        response_total = data.get("totalResults")
+        response_start = data.get("startIndex")
+        response_page_size = data.get("resultsPerPage")
+
+        if (
+            not isinstance(response_total, int)
+            or isinstance(response_total, bool)
+            or response_total < 0
+        ):
+
+            page_errors.append(
+                "NVD response has a missing or invalid totalResults value."
+            )
+
+        elif total_results is None:
+
+            total_results = response_total
+
+        elif response_total != total_results:
+
+            page_errors.append(
+                "NVD totalResults changed during pagination "
+                f"({total_results} -> {response_total})."
+            )
+
+        if (
+            not isinstance(response_start, int)
+            or isinstance(response_start, bool)
+            or response_start < 0
+        ):
+
+            page_errors.append(
+                "NVD response has a missing or invalid startIndex value."
+            )
+
+        elif response_start != start_index:
+
+            page_errors.append(
+                "NVD returned inconsistent pagination metadata "
+                f"(requested startIndex {start_index}, "
+                f"received {response_start})."
+            )
+
+        if (
+            not isinstance(response_page_size, int)
+            or isinstance(response_page_size, bool)
+            or response_page_size < 0
+        ):
+
+            page_errors.append(
+                "NVD response has a missing or invalid resultsPerPage value."
+            )
+
+        new_records = 0
+        invalid_records = 0
+        duplicate_records = 0
+
+        for item in vulnerabilities:
+
+            cve_id = _valid_cve_id(item)
+
+            if cve_id is None:
+
+                invalid_records += 1
+                continue
+
+            if cve_id in seen_ids:
+
+                duplicate_records += 1
+                continue
+
+            seen_ids.add(cve_id)
+            items.append(item)
+            new_records += 1
+
+        if invalid_records:
+
+            page_errors.append(
+                f"Ignored {invalid_records} malformed CVE record(s)."
+            )
+
+        if duplicate_records:
+
+            page_errors.append(
+                f"Ignored {duplicate_records} duplicate CVE record(s)."
+            )
+
+        if vulnerabilities and new_records == 0:
+
+            page_errors.append(
+                "NVD returned a repeated pagination page with no new CVEs."
+            )
+
+        page_count = len(vulnerabilities)
+
+        if (
+            page_count == 0
+            and total_results is not None
+            and start_index < total_results
+        ):
+
+            page_errors.append(
+                "NVD returned an empty page before totalResults was reached."
+            )
+
+        if (
+            total_results is not None
+            and start_index + page_count > total_results
+        ):
+
+            page_errors.append(
+                "NVD returned more records than totalResults reports."
+            )
+
+        errors.extend(page_errors)
+        start_index += page_count
+
+        if page_errors:
+
+            if items:
+
+                return _retrieval_result(
+                    RETRIEVAL_PARTIAL,
+                    items,
+                    total_results,
+                    "; ".join(dict.fromkeys(errors))
+                )
+
+            if (
+                total_results is not None
+                and page_count == 0
+                and total_results > 0
+            ):
+
+                return _retrieval_result(
+                    RETRIEVAL_PARTIAL,
+                    items,
+                    total_results,
+                    "; ".join(dict.fromkeys(errors))
+                )
+
+            return _retrieval_result(
+                RETRIEVAL_MALFORMED,
+                items,
+                total_results,
+                "; ".join(dict.fromkeys(errors))
+            )
+
+        if page_count == 0:
+
             break
 
-    return all_results
+        if total_results is None:
+
+            errors.append(
+                "NVD pagination completeness cannot be established."
+            )
+
+            break
+
+        if start_index >= total_results:
+
+            break
+
+        if pages_requested >= NVD_MAX_PAGES:
+
+            errors.append(
+                f"NVD pagination exceeded {NVD_MAX_PAGES} pages."
+            )
+
+            break
+
+    if errors:
+
+        return _retrieval_result(
+            RETRIEVAL_PARTIAL,
+            items,
+            total_results,
+            "; ".join(dict.fromkeys(errors))
+        )
+
+    if total_results is None or len(items) != total_results:
+
+        return _retrieval_result(
+            RETRIEVAL_PARTIAL,
+            items,
+            total_results,
+            "Unique valid records do not match NVD totalResults."
+        )
+
+    return _retrieval_result(
+        RETRIEVAL_COMPLETE,
+        items,
+        total_results
+    )
+
+
+def search_cves_by_keyword(product_name, results_per_page=100):
+    """
+    Retrieve CVE records using the legacy list-returning interface.
+
+    Callers using this wrapper cannot distinguish complete, partial or
+    failed retrieval. The main workflow uses the status-aware interface.
+    """
+
+    result = search_cves_by_keyword_with_status(
+        product_name,
+        results_per_page
+    )
+
+    return result["items"]
 
 
 # ---------------------------------------------------------
@@ -925,4 +1401,4 @@ if __name__ == "__main__":
         )
 
     print()
-    
+
