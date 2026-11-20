@@ -40,13 +40,21 @@ from cvss_model import calculate_cvss
 
 from version_detector import detect_versions
 
+from ebsr import normalise_cvss_v31_exploitability
+
 from ebsr_adapter import (
+    EBSRAdapterError,
     build_assessment as build_ebsr_assessment,
     load_input as load_ebsr_input,
     merge_live_assessment,
     print_assessment_summary,
     replay_assessment,
     save_assessment,
+)
+
+SAVED_EXPERIMENT_OFFLINE_MESSAGE = (
+    "Saved experiment bundles require offline evaluation. "
+    "Use python tools/run_ebsr_input.py --input <bundle> --out <new-report>."
 )
 
 
@@ -264,6 +272,7 @@ def get_vulnerabilities(
     unknown = []
     not_affected = []
     applicability_records = []
+    assessment_errors = []
     assessment_groups = {
         "affected": [],
         "unknown": [],
@@ -272,15 +281,42 @@ def get_vulnerabilities(
 
     for item in candidates:
 
-        provenance = evaluate_applicability(
-            item,
-            component,
-            version
-        )
-        status = provenance["status"]
-        reason = provenance["reason"]
+        try:
+            provenance = evaluate_applicability(
+                item,
+                component,
+                version
+            )
+            cve_info = extract_cve_information(item)
+        except (
+            AttributeError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ) as exc:
+            assessment_errors.append({
+                "cve_id": item.get("cve", {}).get("id", "UNKNOWN-ID")
+                if isinstance(item, dict)
+                else "UNKNOWN-ID",
+                "error": str(exc),
+            })
+            continue
+
+        status = provenance.get("status")
+        reason = provenance.get("reason")
         applicability_records.append(provenance)
-        cve_info = extract_cve_information(item)
+
+        if status not in (
+            AFFECTED,
+            UNKNOWN,
+            NOT_AFFECTED,
+        ):
+            assessment_errors.append({
+                "cve_id": cve_info["id"],
+                "error": f"Unsupported applicability status: {status!r}",
+            })
+            continue
+
         assessment_row = {
             "cve_id": cve_info["id"],
             "status": status,
@@ -317,8 +353,91 @@ def get_vulnerabilities(
 
     retrieval["applicability"] = applicability_records
     retrieval["assessments"] = assessment_groups
+    retrieval["assessment_errors"] = assessment_errors
+    retrieval["assessment_accounting"] = (
+        build_applicability_accounting(retrieval)
+    )
 
     return affected, unknown, retrieval
+
+
+def build_applicability_accounting(retrieval):
+    """Summarise every retrieved record without remapping its status."""
+
+    groups = retrieval.get("assessments") or {}
+    affected_count = len(groups.get("affected", []))
+    unknown_count = len(groups.get("unknown", []))
+    not_affected_count = len(groups.get("not_affected", []))
+    classified = (
+        affected_count
+        + unknown_count
+        + not_affected_count
+    )
+    received = retrieval.get("received")
+
+    if received is None:
+        received = classified
+
+    skipped = max(
+        0,
+        int(received) - classified - len(
+            retrieval.get("assessment_errors", [])
+        ),
+    )
+    errors = len(retrieval.get("assessment_errors", []))
+
+    return {
+        "retrieved": int(received),
+        "affected": affected_count,
+        "not_affected": not_affected_count,
+        "unknown": unknown_count,
+        "classified": classified,
+        "skipped": skipped,
+        "errors": errors,
+        "reconciled": (
+            classified + skipped + errors
+            == int(received)
+        ),
+    }
+
+
+def show_applicability_summary(retrieval):
+    """Display reconciled applicability counts from actual results."""
+
+    accounting = retrieval.get("assessment_accounting")
+
+    if not accounting:
+        accounting = build_applicability_accounting(retrieval)
+
+    print()
+    print("CVE Applicability Summary")
+    print("=========================")
+    print(
+        f"Retrieved unique valid CVEs: "
+        f"{accounting['retrieved']}"
+    )
+    print(f"AFFECTED: {accounting['affected']}")
+    print(
+        f"NOT_AFFECTED: "
+        f"{accounting['not_affected']}"
+    )
+    print(f"UNKNOWN: {accounting['unknown']}")
+    print(f"Skipped records: {accounting['skipped']}")
+    print(f"Assessment errors: {accounting['errors']}")
+
+    if not accounting["reconciled"]:
+        print(
+            "WARNING: applicability accounting does not reconcile "
+            "with the retrieved-record count."
+        )
+
+    errors = retrieval.get("assessment_errors", [])
+
+    for error in errors:
+        print(
+            f" - {error['cve_id']}: "
+            f"{error['error']}"
+        )
 
 
 def show_retrieval_status(retrieval):
@@ -394,10 +513,27 @@ def show_vulnerabilities(
             item
         )
 
+        source = info.get("cvss_source") or "UNKNOWN"
+        source_type = info.get("cvss_source_type") or "UNKNOWN"
         print(
             f"{index}. {info['id']} "
-            f"- CVSS {info['cvss_score']}"
+            f"- CVSS {info['cvss_version']} "
+            f"{info['cvss_score']} "
+            f"({source}, {source_type})"
         )
+        for alternative in info.get("cvss_alternatives", []):
+            alternative_source = (
+                alternative.get("source") or "UNKNOWN"
+            )
+            alternative_type = (
+                alternative.get("source_type") or "UNKNOWN"
+            )
+            print(
+                "   Alternative: "
+                f"CVSS {alternative.get('version')} "
+                f"{alternative.get('score')} "
+                f"({alternative_source}, {alternative_type})"
+            )
 
 
 def show_unknown_vulnerabilities(
@@ -443,8 +579,8 @@ def show_unknown_vulnerabilities(
 def assess_cvss(info):
 
     print()
-    print("CVSS Assessment")
-    print("================")
+    print("Selected CVE Evidence and CVSS")
+    print("==============================")
 
     print(
         f"CVE: {info['id']}"
@@ -456,7 +592,7 @@ def assess_cvss(info):
     )
 
     print(
-        f"CVSS Score from NVD: "
+        f"Selected CVSS Score: "
         f"{info['cvss_score']}"
     )
 
@@ -465,8 +601,27 @@ def assess_cvss(info):
         f"{info['cvss_vector']}"
     )
 
-    # Our current mathematical
-    # implementation supports CVSS 3.0/3.1.
+    print(
+        "CVSS Source: "
+        f"{info.get('cvss_source') or 'UNKNOWN'}"
+    )
+
+    print(
+        "CVSS Source Type: "
+        f"{info.get('cvss_source_type') or 'UNKNOWN'}"
+    )
+
+    if info.get("cvss_alternatives"):
+        print()
+        print("Alternative CVSS Assessments")
+        print("----------------------------")
+        for alternative in info["cvss_alternatives"]:
+            print(
+                f"CVSS {alternative.get('version')} | "
+                f"{alternative.get('score')} | "
+                f"{alternative.get('source') or 'UNKNOWN'} | "
+                f"{alternative.get('source_type') or 'UNKNOWN'}"
+            )
 
     if (
         info["cvss_vector"]
@@ -474,36 +629,97 @@ def assess_cvss(info):
         in ("3.0", "3.1")
     ):
 
-        result = calculate_cvss(
-            info["cvss_vector"]
-        )
+        try:
+            result = calculate_cvss(
+                info["cvss_vector"]
+            )
+        except (
+            AttributeError,
+            KeyError,
+            TypeError,
+            ValueError,
+        ):
+            result = None
 
-        print()
-        print("CVSS Calculation")
-        print("-----------------")
+        if result is not None:
 
-        print(
-            f"Exploitability: "
-            f"{result['exploitability']:.3f}"
-        )
+            print()
+            print("CVSS Calculation")
+            print("-----------------")
 
-        print(
-            f"Impact: "
-            f"{result['impact']:.3f}"
-        )
+            print(
+                f"Exploitability: "
+                f"{result['exploitability']:.3f}"
+            )
 
-        print(
-            f"Calculated Base Score: "
-            f"{result['base_score']:.1f}"
-        )
+            print(
+                f"Impact: "
+                f"{result['impact']:.3f}"
+            )
 
-        return result
+            print(
+                f"Calculated Base Score: "
+                f"{result['base_score']:.1f}"
+            )
+
+            if info["cvss_version"] == "3.1":
+
+                index = normalise_cvss_v31_exploitability(
+                    info["cvss_vector"]
+                )
+
+                if index is None:
+
+                    print(
+                        "EBSR v3.1 exploitability index: "
+                        "UNQUANTIFIED"
+                    )
+                    print(
+                        "Reason: the supplied CVSS v3.1 vector "
+                        "is not usable by the frozen evaluator."
+                    )
+
+                else:
+
+                    print(
+                        f"EBSR v3.1 exploitability index: "
+                        f"{index:.6f}"
+                    )
+
+                print(
+                    "This index is comparative exploitability, "
+                    "not an exploitation probability."
+                )
+                return result
+
+            print()
+            print(
+                "EBSR v3.1 exploitability index: "
+                "UNQUANTIFIED"
+            )
+            print(
+                "Reason: a CVSS v3.0-only vector is preserved "
+                "but is not relabelled or converted to CVSS v3.1."
+            )
+            print(
+                "A FALSE mandatory path condition still yields "
+                "ZERO, and CONFLICT still takes precedence."
+            )
+            return result
 
     print()
-
     print(
-        "CVSS calculation is not available "
-        "for this CVE."
+        "CVSS calculation is not available for this CVE."
+    )
+    print(
+        "EBSR v3.1 exploitability index: UNQUANTIFIED"
+    )
+    print(
+        "Reason: no usable CVSS v3.1 base vector is available."
+    )
+    print(
+        "A FALSE mandatory path condition still yields ZERO, "
+        "and CONFLICT still takes precedence."
     )
 
     return None
@@ -816,6 +1032,9 @@ def run_ebsr_stage(
 ):
     """Run and optionally persist the architecture-aware assessment."""
 
+    if input_document and "experiment_governance" in input_document:
+        raise EBSRAdapterError(SAVED_EXPERIMENT_OFFLINE_MESSAGE)
+
     document = merge_live_assessment(
         input_document or {},
         live_assessment
@@ -878,6 +1097,9 @@ def main(
     ebsr_input=None,
     ebsr_output_path=None
 ):
+
+    if ebsr_input and "experiment_governance" in ebsr_input:
+        raise EBSRAdapterError(SAVED_EXPERIMENT_OFFLINE_MESSAGE)
 
     print()
     print("====================================")
@@ -1060,6 +1282,9 @@ def main(
     show_retrieval_status(
         retrieval
     )
+    show_applicability_summary(
+        retrieval
+    )
 
     if retrieval["status"] in (
         RETRIEVAL_FAILED,
@@ -1232,7 +1457,7 @@ def main(
 
 
     # =====================================================
-    # Attack Path
+    # Candidate Architecture Route
     # =====================================================
 
     path = get_attack_path(
@@ -1240,17 +1465,34 @@ def main(
     )
 
     print()
-    print("Potential Attack Path")
-    print("=====================")
+    print("Candidate Architecture Route")
+    print("============================")
 
     print(
         " -> ".join(path)
     )
+    print()
+    print(
+        "This route is contextual architecture information. "
+        "Traversal does not establish attack feasibility or a "
+        "demonstrated vulnerability propagation path."
+    )
+    if path and path[-1] == "Healthcare Monitoring":
+
+        print(
+            "Healthcare Monitoring is included only as contextual "
+            "architecture scope and is not assessed as a software "
+            "deployment."
+        )
 
 
     # =====================================================
     # Architecture-Aware EBSR Assessment
     # =====================================================
+
+    print()
+    print("Deployment-Wide EBSR Scenario Coverage")
+    print("======================================")
 
     ebsr_report = run_selected_ebsr(
         selected,
@@ -1270,8 +1512,8 @@ def main(
     # =====================================================
 
     print()
-    print("Assessment Summary")
-    print("==================")
+    print("Selected CVE Assessment Summary")
+    print("===============================")
 
     print(
         f"Component: {target}"
@@ -1279,6 +1521,11 @@ def main(
 
     print(
         f"CVE: {info['id']}"
+    )
+
+    print(
+        "Scope: selected CVE only; deployment-wide scenario "
+        "coverage is reported separately."
     )
 
     print(
@@ -1294,6 +1541,26 @@ def main(
         f"CVSS Score: "
         f"{info['cvss_score']}"
     )
+
+    print(
+        "CVSS Source: "
+        f"{info.get('cvss_source') or 'UNKNOWN'}"
+    )
+
+    print(
+        "CVSS Source Type: "
+        f"{info.get('cvss_source_type') or 'UNKNOWN'}"
+    )
+
+    if info.get("cvss_alternatives"):
+        print("Alternative CVSS Assessments:")
+        for alternative in info["cvss_alternatives"]:
+            print(
+                f"  CVSS {alternative.get('version')} | "
+                f"{alternative.get('score')} | "
+                f"{alternative.get('source') or 'UNKNOWN'} | "
+                f"{alternative.get('source_type') or 'UNKNOWN'}"
+            )
 
     if cvss_result:
 
@@ -1312,13 +1579,45 @@ def main(
             f"{cvss_result['base_score']:.1f}"
         )
 
+    selected_scenarios = [
+        result
+        for result in ebsr_report["scenario_results"]
+        if info["id"] in result["vulnerability_ids"]
+    ]
+
     print(
-        f"EBSR scenario results: "
+        "Selected CVE scenario coverage: "
+        + (
+            "ASSESSED"
+            if selected_scenarios
+            else "NOT_ASSESSED"
+        )
+    )
+
+    if selected_scenarios:
+
+        print(
+            "Selected CVE scenario IDs: "
+            + ", ".join(
+                result["scenario_id"]
+                for result in selected_scenarios
+            )
+        )
+
+    else:
+
+        print(
+            "Reason: no evidence-backed scenario path explicitly "
+            "covered this selected CVE."
+        )
+
+    print(
+        f"Deployment-wide scenario results: "
         f"{len(ebsr_report['scenario_results'])}"
     )
 
     print(
-        f"EBSR NOT_ASSESSED CVEs: "
+        f"Deployment-wide NOT_ASSESSED CVEs: "
         f"{len(ebsr_report['not_assessed_cves'])}"
     )
 
@@ -1342,8 +1641,8 @@ def run_cli(argv=None):
     )
     parser.add_argument(
         "--ebsr-scenarios",
-        help="JSON file containing deployments, attacker profiles, "
-             "architecture evidence, CVE assessments and scenarios."
+        help="Scenario bundle for the live deployment assessment. "
+             "Evaluate saved experiments with tools/run_ebsr_input.py."
     )
     parser.add_argument(
         "--ebsr-out",
@@ -1373,13 +1672,16 @@ def run_cli(argv=None):
         if args.ebsr_scenarios
         else {}
     )
-    main(
-        ebsr_input=ebsr_input,
-        ebsr_output_path=(
-            args.ebsr_out
-            or "output/ebsr_assessments"
+    try:
+        main(
+            ebsr_input=ebsr_input,
+            ebsr_output_path=(
+                args.ebsr_out
+                or "output/ebsr_assessments"
+            )
         )
-    )
+    except EBSRAdapterError as error:
+        parser.error(str(error))
 
 
 # =========================================================

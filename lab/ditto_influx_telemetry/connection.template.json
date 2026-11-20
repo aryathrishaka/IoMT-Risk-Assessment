@@ -1,0 +1,25 @@
+{
+  "name": "IoMT Ditto event to InfluxDB test writer",
+  "connectionType": "http-push",
+  "connectionStatus": "closed",
+  "failoverEnabled": false,
+  "uri": "http://host.docker.internal:8095",
+  "specificConfig": {
+    "parallelism": "1"
+  },
+  "sources": [],
+  "targets": [
+    {
+      "address": "POST:/events",
+      "topics": [
+        "_/_/things/twin/events?namespaces=iomt"
+      ],
+      "authorizationContext": [
+        "ditto:outbound-auth-subject"
+      ],
+      "headerMapping": {
+        "content-type": "application/vnd.eclipse.ditto+json"
+      }
+    }
+  ]
+}

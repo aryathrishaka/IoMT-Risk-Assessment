@@ -1,0 +1,2028 @@
+{
+  "schema_version": "1.1",
+  "assessment_version": "research-cve-2018-12546-experiment-v8",
+  "assessment_scope": "Experiment-scoped Mosquitto 1.5.5 versus Mosquitto 2.1.2 retained-message path through Eclipse Ditto and InfluxDB.",
+  "derived_from": {
+    "schema_reference": "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json",
+    "v7_preserved": true,
+    "frozen_mathematics_changed": false,
+    "purpose": "Add controlled experiment evidence without replacing v7."
+  },
+  "source_hashes": {
+    "v7_scenario": "b990afae57229280ae3ccc0a1bbbe2dcfee77fed944705ecdd72f3e4ea2bc37a",
+    "experiment_1": "e301a9187a3b93184fa976f0163adb68ffcec5c99f672d0e00e675e3e2b348c2",
+    "experiment_2": "1e479eac80ba36f8801b86496c3981d396dd73c9241babe9b398b6826908d758",
+    "readback_verification": "8090c5d7b58a3af2c77d8864055d20d7fe2d8cb814bd126e1101c6ea94c8ba24",
+    "vulnerable_csv": "9e034060166ad46d5156a886acc391dcc7063bdd797faad933cd12b22ab7500d",
+    "control_csv": "14f0e1ecbf055abf2c2ba766fe0eddd9d9f72e622636f200545ba8e6206c7c9c",
+    "ebsr": "e6486ea2a0d5f414dc0a348d82e23e94d61f18a22f6328e931707cbf055d1cdd",
+    "adapter": "255d2a84a28477a9fd79544cb9b0c3512c8c2366126aabdc371c0860a65fdeb2"
+  },
+  "evidence_provenance": {
+    "experiment_1": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+    "experiment_2": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+    "readback_verification": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+    "vulnerable_csv_copy": "E:\\DUK\\SEM3\\MINI PROJECT\\IoMT-Risk-Assessment\\output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback-vulnerable-retained.csv",
+    "control_csv_copy": "E:\\DUK\\SEM3\\MINI PROJECT\\IoMT-Risk-Assessment\\output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback-control-window.csv",
+    "frozen_evaluator": "ebsr.py",
+    "adapter": "ebsr_adapter.py"
+  },
+  "condition_semantics": {
+    "A": "CVE applicability for a CVE-carrying transition; for the control arm A is bound to its explicit NOT_AFFECTED control applicability proposition.",
+    "G": "Observed actor prerequisite: an authenticated publisher with initial write permission before revocation.",
+    "H": "Experiment-specific deployment and configuration prerequisites.",
+    "B": "Explicit, deployment-bound DF/relationship observation during the experiment window.",
+    "K": "CVE-specific capability carried through the tested transition.",
+    "Y": "Receiver processing and receiver-control outcome for the same tested command.",
+    "target_C_I_A": "Experiment-specific target consequences only; source CVSS weights are never copied.",
+    "cve_free_A_G": "For cve_ids: [], frozen model semantics remain undefined; A and G stay UNKNOWN."
+  },
+  "experiment_governance": {
+    "live_experiment_rerun": false,
+    "baseline_transfer_allowed": false,
+    "historical_manual_grade_upgraded": false,
+    "control_check_retain_source": true,
+    "experiment_1_vulnerable_configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+    "experiment_1_controls": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+    "experiment_2_vulnerable_configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+    "experiment_2_control_configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n"
+  },
+  "research_decisions": [
+    {
+      "decision_id": "CVE_FREE_STEP_A_G_UNCHANGED",
+      "status": "APPLIED",
+      "decision": "A and G remain UNKNOWN on every cve_ids: [] Ditto-to-InfluxDB step and do not inherit B, H, K or Y.",
+      "citations": [
+        "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json"
+      ]
+    },
+    {
+      "decision_id": "CONTROL_APPLICABILITY_SEPARATE",
+      "status": "APPLIED",
+      "decision": "The 2.1.2 control is NOT_AFFECTED for CVE-2018-12546 and its control scenarios use an explicit FALSE A proposition, not an inferred vulnerable path.",
+      "citations": [
+        "mosquitto_2.1.2_baseline_results.json"
+      ]
+    },
+    {
+      "decision_id": "DOWNSTREAM_INTEGRITY_CONSEQUENCE_NO_MAGNITUDE",
+      "status": "APPLIED",
+      "decision": "The vulnerable Ditto and InfluxDB integrity-policy consequences are TRUE with numerical magnitude UNQUANTIFIED. C and A remain UNKNOWN.",
+      "citations": [
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json"
+      ]
+    },
+    {
+      "decision_id": "DUPLICATE_ROWS_DIRECTLY_OBSERVED",
+      "status": "RECORDED",
+      "decision": "Two matching vulnerable retained-marker rows with distinct timestamps are recorded. The CSV establishes the row count; no duplication cause is claimed.",
+      "citations": [
+        "E:\\DUK\\SEM3\\MINI PROJECT\\IoMT-Risk-Assessment\\output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback-vulnerable-retained.csv"
+      ]
+    },
+    {
+      "decision_id": "NO_BASELINE_TRANSFER",
+      "status": "APPLIED",
+      "decision": "Experiment results apply only to the named temporary deployments and windows, not restored baseline deployments.",
+      "citations": [
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json"
+      ]
+    },
+    {
+      "decision_id": "HISTORICAL_MANUAL_SEPARATE",
+      "status": "PRESERVED",
+      "decision": "The historical CVE-2018-12546 observation remains MANUALLY_OBSERVED in v7. The v8 scenario uses a separate controlled reproduction record.",
+      "citations": [
+        "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json"
+      ]
+    }
+  ],
+  "deployments": [
+    {
+      "deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+      "component_id": "mosquitto",
+      "display_name": "Experiment 1 vulnerable Mosquitto 1.5.5",
+      "version": "1.5.5",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+        "container_id": "76d24a622d7fd4d9649eafef40097ec0bd89a9634caf0f0bb207d490f1154dbe",
+        "image_reference": "efrecon/mosquitto:1.5.5",
+        "image_id": "sha256:d8bf12824d7fda2811320320dd18931b2f71b9737db91f88aac8be20a1b9bec5",
+        "runtime_version": "1.5.5",
+        "docker_network": "iomt-cve12546-18eae239",
+        "network_alias": null,
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "temporary_deployment": true
+      }
+    },
+    {
+      "deployment_id": "iomt-cve12546-control-28ae20e7",
+      "component_id": "mosquitto",
+      "display_name": "Experiment 1 control Mosquitto 2.1.2",
+      "version": "2.1.2",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "deployment_id": "iomt-cve12546-control-28ae20e7",
+        "container_id": "d7a891d9f026b5d4f588dba50e48b9ed128c0af2b75a8e4f94536de00f2aa9ba",
+        "image_reference": "eclipse-mosquitto:2.1.2-alpine",
+        "image_id": "sha256:6f8d8a947c506f8a2290ec65cd4bd2bc7cb4d43fb5f6271f861cb013e2ef9797",
+        "runtime_version": "2.1.2",
+        "docker_network": "iomt-cve12546-18eae239",
+        "network_alias": null,
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "temporary_deployment": true
+      }
+    },
+    {
+      "deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+      "component_id": "mosquitto",
+      "display_name": "Experiment 2 vulnerable Mosquitto 1.5.5",
+      "version": "1.5.5",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+        "container_id": "2c2a8c5c169aabba67ee3652522709500e2cbb28c59c0ef9c663980caee64abd",
+        "image_reference": "efrecon/mosquitto:1.5.5",
+        "image_id": "sha256:d8bf12824d7fda2811320320dd18931b2f71b9737db91f88aac8be20a1b9bec5",
+        "runtime_version": "1.5.5",
+        "docker_network": "docker_default",
+        "network_alias": "iomt-cve12546-down-vulnerable-9f6efabe1e",
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "temporary_deployment": true
+      }
+    },
+    {
+      "deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+      "component_id": "mosquitto",
+      "display_name": "Experiment 2 control Mosquitto 2.1.2",
+      "version": "2.1.2",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+        "container_id": "fc4a27997d2801992fbdb47bb41554358be2518fa35b7b5bd9536a81ef0219fe",
+        "image_reference": "eclipse-mosquitto:2.1.2-alpine",
+        "image_id": "sha256:6f8d8a947c506f8a2290ec65cd4bd2bc7cb4d43fb5f6271f861cb013e2ef9797",
+        "runtime_version": "2.1.2",
+        "docker_network": "docker_default",
+        "network_alias": "iomt-cve12546-down-control-9f6efabe1e",
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "temporary_deployment": true
+      }
+    },
+    {
+      "deployment_id": "docker-connectivity-1",
+      "component_id": "eclipse_ditto",
+      "display_name": "Eclipse Ditto connectivity 3.9.7",
+      "version": "3.9.7",
+      "discovery_evidence": {
+        "source_artifact": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "container_name": "docker-connectivity-1",
+        "image_reference": "eclipse/ditto-connectivity:3.9.7",
+        "vulnerable_connection_id": "157520a8-e71e-4a99-b95c-a96416940151",
+        "control_connection_id": "6d6a5b40-a5d4-49f7-89d5-fffd630996f7",
+        "scope": "Existing Ditto service used by both isolated arms."
+      }
+    },
+    {
+      "deployment_id": "influxdb-lab",
+      "component_id": "influxdb",
+      "display_name": "InfluxDB 2.7.11",
+      "version": "2.7.11",
+      "discovery_evidence": {
+        "source_artifact": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+        "bucket": "iomt-ditto-influx-test-cd1c965d2a",
+        "organisation": "IoMT-Lab",
+        "writer_event_observation": "The temporary Ditto event writer received matching Thing events and InfluxDB returned HTTP 204.",
+        "readback_status": "CONFIRMED"
+      }
+    }
+  ],
+  "attacker_profiles": [
+    {
+      "attacker_id": "ATTACKER-12546-EXP2-VULNERABLE",
+      "description": "Authenticated publisher in the temporary vulnerable arm with initial write permission, later revoked.",
+      "capabilities": [
+        "Authenticate to the temporary broker.",
+        "Publish a retained command while authorized."
+      ],
+      "provenance": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json"
+    },
+    {
+      "attacker_id": "ATTACKER-12546-EXP2-CONTROL",
+      "description": "Authenticated publisher in the temporary control arm with initial write permission, later revoked.",
+      "capabilities": [
+        "Authenticate to the temporary broker.",
+        "Publish a retained command while authorized."
+      ],
+      "provenance": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json"
+    }
+  ],
+  "architecture_evidence": [
+    {
+      "relationship_id": "relationship.2018_12546.exp2.vulnerable.mosquitto_to_ditto",
+      "source_deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+      "target_deployment_id": "docker-connectivity-1",
+      "transition_type": "DF",
+      "status": "SUPPORTED",
+      "evidence": [
+        "The temporary Ditto connection was open on the isolated topic.",
+        "The normal and post-control commands changed the isolated Thing.",
+        "After verified publisher revocation, broker logs show retained PUBLISH delivery to Ditto and the Thing changed to the retained marker."
+      ],
+      "notes": "Observed only in the temporary vulnerable experiment configuration."
+    },
+    {
+      "relationship_id": "relationship.2018_12546.exp2.control.mosquitto_to_ditto",
+      "source_deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+      "target_deployment_id": "docker-connectivity-1",
+      "transition_type": "DF",
+      "status": "SUPPORTED",
+      "evidence": [
+        "The temporary Ditto connection was open on the isolated topic.",
+        "The normal and post-control commands changed the isolated Thing.",
+        "No retained delivery to Ditto occurred after revocation."
+      ],
+      "notes": "The data-flow relationship is operational; the retained command is separately withheld by the control configuration."
+    },
+    {
+      "relationship_id": "relationship.2018_12546.exp2.vulnerable.ditto_to_influx",
+      "source_deployment_id": "docker-connectivity-1",
+      "target_deployment_id": "influxdb-lab",
+      "transition_type": "DF",
+      "status": "SUPPORTED",
+      "evidence": [
+        "Normal and post-control Thing events produced HTTP 204 writes.",
+        "The retained marker produced two matching InfluxDB rows."
+      ],
+      "notes": "The CVE-free step keeps A and G UNKNOWN."
+    },
+    {
+      "relationship_id": "relationship.2018_12546.exp2.control.ditto_to_influx",
+      "source_deployment_id": "docker-connectivity-1",
+      "target_deployment_id": "influxdb-lab",
+      "transition_type": "DF",
+      "status": "SUPPORTED",
+      "evidence": [
+        "Normal and post-control Thing events produced HTTP 204 writes.",
+        "No retained-marker row was found in the bounded control window."
+      ],
+      "notes": "The writer path is operational, but the retained-marker effect is absent."
+    }
+  ],
+  "evidence": [
+    {
+      "proposition_id": "cve.2018_12546.exp1.vulnerable.applicability",
+      "status": "T",
+      "evidence_class": "SAVED_NVD_CPE_AND_CONTROLLED_VERSION_EVIDENCE",
+      "source": "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json",
+      "evidence": [
+        "The saved CPE decision is AFFECTED for Mosquitto 1.5.5.",
+        "The Experiment 1 vulnerable broker reported runtime version 1.5.5."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 temporary vulnerable deployment only."
+    },
+    {
+      "proposition_id": "cve.2018_12546.exp1.control.applicability",
+      "status": "F",
+      "evidence_class": "SAVED_NVD_CPE_AND_CONTROLLED_VERSION_EVIDENCE",
+      "source": "mosquitto_2.1.2_baseline_results.json",
+      "evidence": [
+        "The affected range ends at 1.5.5 inclusive.",
+        "The Experiment 1 control broker reported runtime version 2.1.2."
+      ],
+      "reason": "The CVE applicability proposition is FALSE for the Experiment 1 control deployment.",
+      "scope": "Experiment 1 temporary control deployment only."
+    },
+    {
+      "proposition_id": "attacker.2018_12546.exp1.vulnerable.authenticated_publisher",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "Authentication was enabled and a wrong password was rejected.",
+        "The publisher authenticated and retained publication was acknowledged.",
+        "The publisher identity was distinct from the subscriber."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 temporary vulnerable arm."
+    },
+    {
+      "proposition_id": "attacker.2018_12546.exp1.control.authenticated_publisher",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "Authentication was enabled and a wrong password was rejected.",
+        "The publisher authenticated and retained publication was acknowledged.",
+        "The publisher identity was distinct from the subscriber."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 temporary control arm."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp1.vulnerable.broker_configuration",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "Publisher write permission was revoked and SIGHUP reload was observed."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 vulnerable broker and observation window."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp1.control.broker_configuration",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "check_retain_source=true was explicit.",
+        "Publisher write permission was revoked and SIGHUP reload was observed."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 control broker and observation window."
+    },
+    {
+      "proposition_id": "cve.2018_12546.exp2.vulnerable.applicability",
+      "status": "T",
+      "evidence_class": "SAVED_NVD_CPE_AND_CONTROLLED_VERSION_EVIDENCE",
+      "source": "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json",
+      "evidence": [
+        "The saved CPE decision is AFFECTED for Mosquitto 1.5.5.",
+        "The temporary vulnerable broker reported runtime version 1.5.5."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable deployment only."
+    },
+    {
+      "proposition_id": "cve.2018_12546.exp2.control.applicability",
+      "status": "F",
+      "evidence_class": "SAVED_NVD_CPE_AND_CONTROLLED_VERSION_EVIDENCE",
+      "source": "mosquitto_2.1.2_baseline_results.json",
+      "evidence": [
+        "The affected range ends at 1.5.5 inclusive.",
+        "The temporary control broker reported runtime version 2.1.2.",
+        "The saved control baseline records zero affected candidates."
+      ],
+      "reason": "The CVE applicability proposition is FALSE for the temporary control deployment.",
+      "scope": "Temporary control deployment only."
+    },
+    {
+      "proposition_id": "attacker.2018_12546.exp2.vulnerable.authenticated_publisher",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "Authentication was enabled and a wrong password was rejected.",
+        "The experiment publisher authenticated and initially published the retained command.",
+        "Publisher write permission was subsequently revoked and enforcement was verified."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable arm."
+    },
+    {
+      "proposition_id": "attacker.2018_12546.exp2.control.authenticated_publisher",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "Authentication was enabled and a wrong password was rejected.",
+        "The experiment publisher authenticated and initially published the retained command.",
+        "Publisher write permission was subsequently revoked and enforcement was verified."
+      ],
+      "reason": null,
+      "scope": "Temporary control arm."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp2.vulnerable.broker_configuration",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "Retained command was stored and delivered after an enforced ACL reload."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable broker and isolated MQTT 3.1.1 test."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp2.control.broker_configuration",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "check_retain_source=true was explicit.",
+        "Retained command was stored while authorized; after revocation it was withheld."
+      ],
+      "reason": null,
+      "scope": "Temporary control broker and isolated MQTT 3.1.1 test."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp2.vulnerable.mosquitto_to_ditto",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "Ditto consumed the retained command after revocation.",
+        "The retained marker changed the isolated vulnerable Thing."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable experiment window."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp2.control.mosquitto_to_ditto",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "Ditto processed normal and post-control messages on the same link.",
+        "The retained command was not delivered by the control broker."
+      ],
+      "reason": null,
+      "scope": "Temporary control experiment window."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp1.vulnerable.direct",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "Exact temporary deployment and run were time-scoped.",
+        "A fresh authorized subscriber received the old retained marker after revocation."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 vulnerable observation window."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp1.control.direct",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "Exact temporary deployment and run were time-scoped.",
+        "The matching control withheld the retained marker."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 control observation window."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp1.vulnerable.retained_command",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "After verified revocation, a fresh authorized subscriber received the old retained marker."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 direct retained-message transition."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp1.control.retained_command",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "After verified revocation, the check_retain_source=true control withheld the old retained marker."
+      ],
+      "reason": "The control blocked the retained-message transition.",
+      "scope": "Experiment 1 direct control transition."
+    },
+    {
+      "proposition_id": "receiver.mosquitto.2018_12546.exp1.vulnerable.retained_delivery",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "A fresh authorized subscriber received the retained marker with retained flag set."
+      ],
+      "reason": null,
+      "scope": "Experiment 1 vulnerable subscriber observation."
+    },
+    {
+      "proposition_id": "receiver.mosquitto.2018_12546.exp1.control.retained_delivery",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "A fresh authorized subscriber received no retained marker in the bounded control window."
+      ],
+      "reason": "The control prevented retained delivery.",
+      "scope": "Experiment 1 control subscriber observation."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp2.vulnerable.retained_command",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "After verified revocation, Experiment 1 delivered the old retained marker to a fresh subscriber.",
+        "Experiment 2 again delivered the retained marker to Ditto."
+      ],
+      "reason": null,
+      "scope": "Exact retained command and revocation transition."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp2.control.retained_command",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+      "evidence": [
+        "Experiment 1's check_retain_source=true control withheld the marker.",
+        "Experiment 2's explicit check_retain_source=true control delivered no retained command to Ditto."
+      ],
+      "reason": "No retained delivery occurred in the control configuration.",
+      "scope": "Exact control transition."
+    },
+    {
+      "proposition_id": "receiver.ditto.2018_12546.exp2.vulnerable.retained_processing",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "The isolated Thing changed to temperature 42.75 and the retained marker.",
+        "The associated Ditto event reached the temporary writer."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable Ditto Thing and receiver window."
+    },
+    {
+      "proposition_id": "receiver.ditto.2018_12546.exp2.control.retained_processing",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "The isolated Thing remained at 37.0/BASELINE after the retained stage.",
+        "No retained-marker writer event was observed."
+      ],
+      "reason": "The retained command was not processed by the control receiver.",
+      "scope": "Temporary control Ditto Thing and receiver window."
+    },
+    {
+      "proposition_id": "unresolved.2018_12546.cve_free_step.A",
+      "status": "U",
+      "evidence_class": "MODEL_SEMANTICS_GAP",
+      "source": "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json",
+      "evidence": [
+        "The frozen material defines no independent A meaning for a cve_ids: [] step."
+      ],
+      "reason": "A remains UNKNOWN and does not inherit the relationship result.",
+      "scope": "CVE-free ordered transition."
+    },
+    {
+      "proposition_id": "unresolved.2018_12546.cve_free_step.G",
+      "status": "U",
+      "evidence_class": "MODEL_SEMANTICS_GAP",
+      "source": "scenarios\\ebsr_mosquitto_12546_12550_12551_v7.json",
+      "evidence": [
+        "The frozen material defines no independent G meaning for a cve_ids: [] step."
+      ],
+      "reason": "G remains UNKNOWN and does not inherit the relationship result.",
+      "scope": "CVE-free ordered transition."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp2.vulnerable.ditto_to_influx_write",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "The writer was ready, the event connection was open, and InfluxDB health was 200.",
+        "Normal, retained and post-control events produced HTTP 204 writes."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable writer and bucket."
+    },
+    {
+      "proposition_id": "preconditions.2018_12546.exp2.control.ditto_to_influx_write",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "The same writer and bucket configuration was used.",
+        "Normal and post-control events produced confirmed database rows."
+      ],
+      "reason": null,
+      "scope": "Temporary control writer and bucket."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp2.vulnerable.ditto_to_influx",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "Two matching retained-marker rows have distinct timestamps.",
+        "Rows match the exact Thing ID, marker and value 42.75."
+      ],
+      "reason": null,
+      "scope": "CVE-free data-flow step in the temporary vulnerable arm."
+    },
+    {
+      "proposition_id": "architecture.2018_12546.exp2.control.ditto_to_influx",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "Normal and post-control rows confirm the writer path.",
+        "The retained-marker query returned zero rows in the bounded window."
+      ],
+      "reason": null,
+      "scope": "CVE-free data-flow step in the temporary control arm."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp2.vulnerable.cve_effect_carried_to_influx",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "The retained marker from the CVE path reached the accepted InfluxDB write stage."
+      ],
+      "reason": null,
+      "scope": "Retained command chain in the temporary vulnerable arm."
+    },
+    {
+      "proposition_id": "capability.2018_12546.exp2.control.cve_effect_carried_to_influx",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "No retained-marker row or writer event exists for the control arm."
+      ],
+      "reason": "The CVE-specific retained effect did not reach InfluxDB.",
+      "scope": "Retained command chain in the temporary control arm."
+    },
+    {
+      "proposition_id": "receiver.influxdb.2018_12546.exp2.vulnerable.retained_processing",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "The vulnerable retained-marker CSV contains two rows.",
+        "Both rows match the Thing ID, marker and temperature exactly."
+      ],
+      "reason": null,
+      "scope": "Temporary vulnerable InfluxDB write and readback."
+    },
+    {
+      "proposition_id": "receiver.influxdb.2018_12546.exp2.control.retained_processing",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+      "evidence": [
+        "The control retained-marker query contains zero rows.",
+        "Normal and post-control rows prove the writer itself remained operational."
+      ],
+      "reason": "The retained command was not processed into the control telemetry record.",
+      "scope": "Temporary control InfluxDB write and readback."
+    },
+    {
+      "proposition_id": "observation.end_to_end.normal_telemetry_chain.exp2",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION_PREREQUISITE",
+      "source": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "Both arms delivered normal non-retained commands through Ditto to the isolated Thing.",
+        "Normal events reached the writer with HTTP 204.",
+        "The control normal and post-control rows were confirmed in InfluxDB."
+      ],
+      "reason": null,
+      "scope": "Temporary experiment configurations only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.I",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "Retained delivery after revocation is broker behaviour, not a specific adverse integrity effect on Mosquitto itself.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.I",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "The retained command changed the isolated Ditto Thing after publisher write revocation was independently enforced."
+      ],
+      "reason": "An integrity-policy consequence is observed, but its numerical magnitude is unavailable.",
+      "scope": "One temporary deployment, isolated Thing, writer and observation window."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.I",
+      "status": "T",
+      "evidence_class": "CONTROLLED_REPRODUCTION",
+      "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "The corresponding retained command produced accepted InfluxDB writes carrying the retained marker."
+      ],
+      "reason": "An integrity-policy consequence is observed, but its numerical magnitude is unavailable.",
+      "scope": "One temporary deployment, isolated Thing, writer and observation window."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.control.mosquitto.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.control.mosquitto.I",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "Retained delivery after revocation is broker behaviour, not a specific adverse integrity effect on Mosquitto itself.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp1.control.mosquitto.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.ditto.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.ditto.I",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "The isolated control Thing remained at its 37.0/BASELINE state."
+      ],
+      "reason": "No policy consequence was observed for this attempted retained command in the control window.",
+      "scope": "One temporary deployment, isolated Thing, writer and observation window."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.ditto.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.influxdb.C",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.influxdb.I",
+      "status": "F",
+      "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+      "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+      "evidence": [
+        "No retained-marker database row was found in the bounded control window."
+      ],
+      "reason": "No policy consequence was observed for this attempted retained command in the control window.",
+      "scope": "One temporary deployment, isolated Thing, writer and observation window."
+    },
+    {
+      "proposition_id": "target.2018_12546.exp2.control.influxdb.A",
+      "status": "U",
+      "evidence_class": "EVIDENCE_GAP",
+      "source": "No confidentiality or availability experiment",
+      "evidence": [],
+      "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+      "scope": "Experiment-specific observation window only."
+    }
+  ],
+  "cve_assessments": [
+    {
+      "component": "Mosquitto",
+      "component_id": "mosquitto",
+      "deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+      "display_name": "Experiment 1 vulnerable Mosquitto 1.5.5",
+      "version": "1.5.5",
+      "detected_version": "1.5.5",
+      "assessment_version_source": "The saved CVE-2018-12546 applicability is bound to the Experiment 1 runtime version and evidence window.",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+        "container_id": "76d24a622d7fd4d9649eafef40097ec0bd89a9634caf0f0bb207d490f1154dbe",
+        "image_reference": "efrecon/mosquitto:1.5.5",
+        "image_id": "sha256:d8bf12824d7fda2811320320dd18931b2f71b9737db91f88aac8be20a1b9bec5",
+        "runtime_version": "1.5.5",
+        "docker_network": "iomt-cve12546-18eae239",
+        "network_alias": null,
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "temporary_deployment": true
+      },
+      "retrieval": {
+        "status": "COMPLETE",
+        "received": 37,
+        "total_results": 37,
+        "error": null
+      },
+      "retrieval_source": "saved CVE-2018-12546 applicability snapshot",
+      "affected": [
+        {
+          "cve_id": "CVE-2018-12546",
+          "status": "AFFECTED",
+          "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+          "cvss": {
+            "scale": "CVSS v3.x",
+            "primary": {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            "other": [
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ],
+            "all": [
+              {
+                "version": "3.1",
+                "score": 6.5,
+                "severity": "MEDIUM",
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              },
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ]
+          },
+          "description": "In Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) when a client publishes a retained message to a topic, then has its access to that topic revoked, the retained message will still be published to ",
+          "applicability": {
+            "cve_id": "CVE-2018-12546",
+            "component": {
+              "requested": "mosquitto",
+              "canonical_id": "mosquitto",
+              "display_name": "Mosquitto",
+              "cpe_vendor": "eclipse",
+              "cpe_product": "mosquitto"
+            },
+            "version": "1.5.5",
+            "environment": {
+              "os_family": "linux",
+              "os_cpes": [
+                [
+                  "linux",
+                  "linux_kernel"
+                ]
+              ],
+              "products": {}
+            },
+            "environment_source": "DEFAULT_ENVIRONMENT",
+            "configurations": [
+              {
+                "configuration_index": 0,
+                "named_target": true,
+                "vulnerable_target_found": true,
+                "result_before_product_guard": "TRUE",
+                "result": "TRUE",
+                "product_guard_reason": null,
+                "decision_tree": {
+                  "kind": "node",
+                  "operator": "OR",
+                  "negated": false,
+                  "child_results": [
+                    {
+                      "kind": "node",
+                      "operator": "OR",
+                      "negated": false,
+                      "child_results": [
+                        {
+                          "kind": "cpe_match",
+                          "criteria": "cpe:2.3:a:eclipse:mosquitto:*:*:*:*:*:*:*:*",
+                          "vulnerable": true,
+                          "target_product": true,
+                          "parsed_cpe": {
+                            "part": "a",
+                            "vendor": "eclipse",
+                            "product": "mosquitto",
+                            "version": "*",
+                            "update": "*"
+                          },
+                          "status": "TRUE",
+                          "reason": "Detected version satisfies all CPE range bounds.",
+                          "current_version": "1.5.5",
+                          "cpe_version": "*",
+                          "cpe_update": "*",
+                          "constraints": {
+                            "start_including": "1.0",
+                            "start_excluding": null,
+                            "end_including": "1.5.5",
+                            "end_excluding": null
+                          }
+                        }
+                      ],
+                      "raw_result": "TRUE",
+                      "status": "TRUE"
+                    }
+                  ],
+                  "raw_result": "TRUE",
+                  "status": "TRUE"
+                }
+              }
+            ],
+            "status": "AFFECTED",
+            "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+            "decision_counts": {
+              "AFFECTED": 1,
+              "NOT_AFFECTED": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "source_snapshot": "output\\ebsr_assessments\\ebsr-assessment-20261110T140855977011Z-v1.0.json"
+        }
+      ],
+      "affected_other_scale": [],
+      "unknown": [],
+      "not_affected": []
+    },
+    {
+      "component": "Mosquitto",
+      "component_id": "mosquitto",
+      "deployment_id": "iomt-cve12546-control-28ae20e7",
+      "display_name": "Experiment 1 control Mosquitto 2.1.2",
+      "version": "2.1.2",
+      "detected_version": "2.1.2",
+      "assessment_version_source": "The saved control applicability is bound to the Experiment 1 runtime version and evidence window.",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "deployment_id": "iomt-cve12546-control-28ae20e7",
+        "container_id": "d7a891d9f026b5d4f588dba50e48b9ed128c0af2b75a8e4f94536de00f2aa9ba",
+        "image_reference": "eclipse-mosquitto:2.1.2-alpine",
+        "image_id": "sha256:6f8d8a947c506f8a2290ec65cd4bd2bc7cb4d43fb5f6271f861cb013e2ef9797",
+        "runtime_version": "2.1.2",
+        "docker_network": "iomt-cve12546-18eae239",
+        "network_alias": null,
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "temporary_deployment": true
+      },
+      "retrieval": {
+        "status": "COMPLETE",
+        "received": 35,
+        "total_results": 35,
+        "error": null
+      },
+      "retrieval_source": "mosquitto_2.1.2_baseline_results.json",
+      "affected": [],
+      "affected_other_scale": [],
+      "unknown": [],
+      "not_affected": [
+        {
+          "cve_id": "CVE-2018-12546",
+          "status": "NOT_AFFECTED",
+          "reason": "The temporary control deployment reports Mosquitto 2.1.2, outside the affected range 1.0 through 1.5.5 inclusive.",
+          "cvss": {
+            "scale": "CVSS v3.x",
+            "primary": {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            "other": [
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ],
+            "all": [
+              {
+                "version": "3.1",
+                "score": 6.5,
+                "severity": "MEDIUM",
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              },
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ]
+          },
+          "description": "In Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) when a client publishes a retained message to a topic, then has its access to that topic revoked, the retained message will still be published to ",
+          "applicability": {
+            "cve_id": "CVE-2018-12546",
+            "version": "2.1.2",
+            "status": "NOT_AFFECTED",
+            "reason": "Version 2.1.2 is above the saved affected boundary.",
+            "source_snapshot": "mosquitto_2.1.2_baseline_results.json"
+          }
+        }
+      ]
+    },
+    {
+      "component": "Mosquitto",
+      "component_id": "mosquitto",
+      "deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+      "display_name": "Experiment 2 vulnerable Mosquitto 1.5.5",
+      "version": "1.5.5",
+      "detected_version": "1.5.5",
+      "assessment_version_source": "The saved CVE-2018-12546 applicability is bound to the temporary Experiment 2 runtime version. No fresh NVD retrieval occurred.",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+        "container_id": "2c2a8c5c169aabba67ee3652522709500e2cbb28c59c0ef9c663980caee64abd",
+        "image_reference": "efrecon/mosquitto:1.5.5",
+        "image_id": "sha256:d8bf12824d7fda2811320320dd18931b2f71b9737db91f88aac8be20a1b9bec5",
+        "runtime_version": "1.5.5",
+        "docker_network": "docker_default",
+        "network_alias": "iomt-cve12546-down-vulnerable-9f6efabe1e",
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+        "temporary_deployment": true
+      },
+      "retrieval": {
+        "status": "COMPLETE",
+        "received": 37,
+        "total_results": 37,
+        "error": null
+      },
+      "retrieval_source": "saved CVE-2018-12546 applicability snapshot",
+      "affected": [
+        {
+          "cve_id": "CVE-2018-12546",
+          "status": "AFFECTED",
+          "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+          "cvss": {
+            "scale": "CVSS v3.x",
+            "primary": {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            "other": [
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ],
+            "all": [
+              {
+                "version": "3.1",
+                "score": 6.5,
+                "severity": "MEDIUM",
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              },
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ]
+          },
+          "description": "In Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) when a client publishes a retained message to a topic, then has its access to that topic revoked, the retained message will still be published to ",
+          "applicability": {
+            "cve_id": "CVE-2018-12546",
+            "component": {
+              "requested": "mosquitto",
+              "canonical_id": "mosquitto",
+              "display_name": "Mosquitto",
+              "cpe_vendor": "eclipse",
+              "cpe_product": "mosquitto"
+            },
+            "version": "1.5.5",
+            "environment": {
+              "os_family": "linux",
+              "os_cpes": [
+                [
+                  "linux",
+                  "linux_kernel"
+                ]
+              ],
+              "products": {}
+            },
+            "environment_source": "DEFAULT_ENVIRONMENT",
+            "configurations": [
+              {
+                "configuration_index": 0,
+                "named_target": true,
+                "vulnerable_target_found": true,
+                "result_before_product_guard": "TRUE",
+                "result": "TRUE",
+                "product_guard_reason": null,
+                "decision_tree": {
+                  "kind": "node",
+                  "operator": "OR",
+                  "negated": false,
+                  "child_results": [
+                    {
+                      "kind": "node",
+                      "operator": "OR",
+                      "negated": false,
+                      "child_results": [
+                        {
+                          "kind": "cpe_match",
+                          "criteria": "cpe:2.3:a:eclipse:mosquitto:*:*:*:*:*:*:*:*",
+                          "vulnerable": true,
+                          "target_product": true,
+                          "parsed_cpe": {
+                            "part": "a",
+                            "vendor": "eclipse",
+                            "product": "mosquitto",
+                            "version": "*",
+                            "update": "*"
+                          },
+                          "status": "TRUE",
+                          "reason": "Detected version satisfies all CPE range bounds.",
+                          "current_version": "1.5.5",
+                          "cpe_version": "*",
+                          "cpe_update": "*",
+                          "constraints": {
+                            "start_including": "1.0",
+                            "start_excluding": null,
+                            "end_including": "1.5.5",
+                            "end_excluding": null
+                          }
+                        }
+                      ],
+                      "raw_result": "TRUE",
+                      "status": "TRUE"
+                    }
+                  ],
+                  "raw_result": "TRUE",
+                  "status": "TRUE"
+                }
+              }
+            ],
+            "status": "AFFECTED",
+            "reason": "Version 1.5.5 satisfies an affected configuration (version range and platform conditions).",
+            "decision_counts": {
+              "AFFECTED": 1,
+              "NOT_AFFECTED": 0,
+              "UNKNOWN": 0
+            }
+          },
+          "source_snapshot": "output\\ebsr_assessments\\ebsr-assessment-20261110T140855977011Z-v1.0.json"
+        }
+      ],
+      "affected_other_scale": [],
+      "unknown": [],
+      "not_affected": []
+    },
+    {
+      "component": "Mosquitto",
+      "component_id": "mosquitto",
+      "deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+      "display_name": "Experiment 2 control Mosquitto 2.1.2",
+      "version": "2.1.2",
+      "detected_version": "2.1.2",
+      "assessment_version_source": "The temporary Experiment 2 runtime version is checked against the saved affected boundary. No fresh NVD retrieval occurred.",
+      "discovery_evidence": {
+        "source_artifact": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+        "container_id": "fc4a27997d2801992fbdb47bb41554358be2518fa35b7b5bd9536a81ef0219fe",
+        "image_reference": "eclipse-mosquitto:2.1.2-alpine",
+        "image_id": "sha256:6f8d8a947c506f8a2290ec65cd4bd2bc7cb4d43fb5f6271f861cb013e2ef9797",
+        "runtime_version": "2.1.2",
+        "docker_network": "docker_default",
+        "network_alias": "iomt-cve12546-down-control-9f6efabe1e",
+        "configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+        "temporary_deployment": true
+      },
+      "retrieval": {
+        "status": "COMPLETE",
+        "received": 35,
+        "total_results": 35,
+        "error": null
+      },
+      "retrieval_source": "mosquitto_2.1.2_baseline_results.json",
+      "affected": [],
+      "affected_other_scale": [],
+      "unknown": [],
+      "not_affected": [
+        {
+          "cve_id": "CVE-2018-12546",
+          "status": "NOT_AFFECTED",
+          "reason": "The temporary control deployment reports Mosquitto 2.1.2, outside the affected range 1.0 through 1.5.5 inclusive.",
+          "cvss": {
+            "scale": "CVSS v3.x",
+            "primary": {
+              "version": "3.1",
+              "score": 6.5,
+              "severity": "MEDIUM",
+              "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+              "source_type": "Primary",
+              "source": "nvd@nist.gov"
+            },
+            "other": [
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ],
+            "all": [
+              {
+                "version": "3.1",
+                "score": 6.5,
+                "severity": "MEDIUM",
+                "vector": "CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:H/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              },
+              {
+                "version": "2.0",
+                "score": 4.0,
+                "severity": "MEDIUM",
+                "vector": "AV:N/AC:L/Au:S/C:N/I:P/A:N",
+                "source_type": "Primary",
+                "source": "nvd@nist.gov"
+              }
+            ]
+          },
+          "description": "In Eclipse Mosquitto version 1.0 to 1.5.5 (inclusive) when a client publishes a retained message to a topic, then has its access to that topic revoked, the retained message will still be published to ",
+          "applicability": {
+            "cve_id": "CVE-2018-12546",
+            "version": "2.1.2",
+            "status": "NOT_AFFECTED",
+            "reason": "Version 2.1.2 is above the saved affected boundary.",
+            "source_snapshot": "mosquitto_2.1.2_baseline_results.json"
+          }
+        }
+      ]
+    }
+  ],
+  "scenarios": [
+    {
+      "scenario_id": "EXP1-12546-VULNERABLE-MOSQUITTO",
+      "attacker_id": "ATTACKER-12546-EXP2-VULNERABLE",
+      "target_deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped direct retained-message path for the vulnerable temporary Mosquitto deployment.",
+      "paths": [
+        {
+          "path_id": "exp1-12546-vulnerable-direct",
+          "target_deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.C"
+            },
+            "I": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "Retained delivery after revocation is broker behaviour, not a specific adverse integrity effect on Mosquitto itself.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.vulnerable.mosquitto.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp1-12546-vulnerable-direct-step",
+              "source_deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+              "target_deployment_id": "iomt-cve12546-vuln-b7c3ae4e",
+              "transition_type": "DIRECT",
+              "cve_ids": [
+                "CVE-2018-12546"
+              ],
+              "reproduction_grades": {
+                "CVE-2018-12546": "INDEPENDENTLY_REPRODUCED"
+              },
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp1.vulnerable.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp1.vulnerable.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp1.vulnerable.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp1.vulnerable.direct"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp1.vulnerable.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.mosquitto.2018_12546.exp1.vulnerable.retained_delivery"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "EXP2-12546-VULNERABLE-DITTO",
+      "attacker_id": "ATTACKER-12546-EXP2-VULNERABLE",
+      "target_deployment_id": "docker-connectivity-1",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped Mosquitto-to-Ditto retained-command path for the vulnerable arm.",
+      "paths": [
+        {
+          "path_id": "exp2-12546-vulnerable-to-ditto",
+          "target_deployment_id": "docker-connectivity-1",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.C"
+            },
+            "I": {
+              "state": "T",
+              "evidence_class": "CONTROLLED_REPRODUCTION",
+              "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+              "evidence": [
+                "The retained command changed the isolated Ditto Thing after publisher write revocation was independently enforced."
+              ],
+              "reason": "An integrity-policy consequence is observed, but its numerical magnitude is unavailable.",
+              "scope": "One temporary deployment, isolated Thing, writer and observation window.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.ditto.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp2-12546-vulnerable-mqtt-to-ditto",
+              "source_deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+              "target_deployment_id": "docker-connectivity-1",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.vulnerable.mosquitto_to_ditto",
+              "cve_ids": [
+                "CVE-2018-12546"
+              ],
+              "reproduction_grades": {
+                "CVE-2018-12546": "INDEPENDENTLY_REPRODUCED"
+              },
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp2.vulnerable.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp2.vulnerable.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.vulnerable.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.vulnerable.mosquitto_to_ditto"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.vulnerable.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.ditto.2018_12546.exp2.vulnerable.retained_processing"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "EXP2-12546-VULNERABLE-INFLUX",
+      "attacker_id": "ATTACKER-12546-EXP2-VULNERABLE",
+      "target_deployment_id": "influxdb-lab",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped retained-command chain through Ditto to InfluxDB for the vulnerable arm.",
+      "paths": [
+        {
+          "path_id": "exp2-12546-vulnerable-to-influx",
+          "target_deployment_id": "influxdb-lab",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.C"
+            },
+            "I": {
+              "state": "T",
+              "evidence_class": "CONTROLLED_REPRODUCTION",
+              "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+              "evidence": [
+                "The corresponding retained command produced accepted InfluxDB writes carrying the retained marker."
+              ],
+              "reason": "An integrity-policy consequence is observed, but its numerical magnitude is unavailable.",
+              "scope": "One temporary deployment, isolated Thing, writer and observation window.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.vulnerable.influxdb.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp2-12546-vulnerable-mqtt-to-ditto",
+              "source_deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+              "target_deployment_id": "docker-connectivity-1",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.vulnerable.mosquitto_to_ditto",
+              "cve_ids": [
+                "CVE-2018-12546"
+              ],
+              "reproduction_grades": {
+                "CVE-2018-12546": "INDEPENDENTLY_REPRODUCED"
+              },
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp2.vulnerable.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp2.vulnerable.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.vulnerable.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.vulnerable.mosquitto_to_ditto"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.vulnerable.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.ditto.2018_12546.exp2.vulnerable.retained_processing"
+                }
+              }
+            },
+            {
+              "step_id": "exp2-12546-vulnerable-ditto-to-influx",
+              "source_deployment_id": "docker-connectivity-1",
+              "target_deployment_id": "influxdb-lab",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.vulnerable.ditto_to_influx",
+              "cve_ids": [],
+              "conditions": {
+                "A": {
+                  "proposition_id": "unresolved.2018_12546.cve_free_step.A"
+                },
+                "G": {
+                  "proposition_id": "unresolved.2018_12546.cve_free_step.G"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.vulnerable.ditto_to_influx_write"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.vulnerable.ditto_to_influx"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.vulnerable.cve_effect_carried_to_influx"
+                },
+                "Y": {
+                  "proposition_id": "receiver.influxdb.2018_12546.exp2.vulnerable.retained_processing"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "EXP1-12546-CONTROL-MOSQUITTO",
+      "attacker_id": "ATTACKER-12546-EXP2-CONTROL",
+      "target_deployment_id": "iomt-cve12546-control-28ae20e7",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped direct retained-message path for the control temporary Mosquitto deployment.",
+      "paths": [
+        {
+          "path_id": "exp1-12546-control-direct",
+          "target_deployment_id": "iomt-cve12546-control-28ae20e7",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.control.mosquitto.C"
+            },
+            "I": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "Retained delivery after revocation is broker behaviour, not a specific adverse integrity effect on Mosquitto itself.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.control.mosquitto.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp1.control.mosquitto.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp1-12546-control-direct-step",
+              "source_deployment_id": "iomt-cve12546-control-28ae20e7",
+              "target_deployment_id": "iomt-cve12546-control-28ae20e7",
+              "transition_type": "DIRECT",
+              "cve_ids": [],
+              "reproduction_grades": {},
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp1.control.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp1.control.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp1.control.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp1.control.direct"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp1.control.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.mosquitto.2018_12546.exp1.control.retained_delivery"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "EXP2-12546-CONTROL-DITTO",
+      "attacker_id": "ATTACKER-12546-EXP2-CONTROL",
+      "target_deployment_id": "docker-connectivity-1",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped Mosquitto-to-Ditto retained-command path for the control arm.",
+      "paths": [
+        {
+          "path_id": "exp2-12546-control-to-ditto",
+          "target_deployment_id": "docker-connectivity-1",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.control.ditto.C"
+            },
+            "I": {
+              "state": "F",
+              "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+              "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+              "evidence": [
+                "The isolated control Thing remained at its 37.0/BASELINE state."
+              ],
+              "reason": "No policy consequence was observed for this attempted retained command in the control window.",
+              "scope": "One temporary deployment, isolated Thing, writer and observation window.",
+              "proposition_id": "target.2018_12546.exp2.control.ditto.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.control.ditto.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp2-12546-control-mqtt-to-ditto",
+              "source_deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+              "target_deployment_id": "docker-connectivity-1",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.control.mosquitto_to_ditto",
+              "cve_ids": [],
+              "reproduction_grades": {},
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp2.control.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp2.control.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.control.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.control.mosquitto_to_ditto"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.control.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.ditto.2018_12546.exp2.control.retained_processing"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "scenario_id": "EXP2-12546-CONTROL-INFLUX",
+      "attacker_id": "ATTACKER-12546-EXP2-CONTROL",
+      "target_deployment_id": "influxdb-lab",
+      "cve_under_test": "CVE-2018-12546",
+      "description": "Experiment-scoped retained-command chain through Ditto to InfluxDB for the control arm.",
+      "paths": [
+        {
+          "path_id": "exp2-12546-control-to-influx",
+          "target_deployment_id": "influxdb-lab",
+          "target_channels": {
+            "C": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.control.influxdb.C"
+            },
+            "I": {
+              "state": "F",
+              "evidence_class": "CONTROLLED_REPRODUCTION_CONTROL",
+              "source": "output/evidence_runs/cve-2018-12546-downstream-20261118T200923198752Z.json",
+              "evidence": [
+                "No retained-marker database row was found in the bounded control window."
+              ],
+              "reason": "No policy consequence was observed for this attempted retained command in the control window.",
+              "scope": "One temporary deployment, isolated Thing, writer and observation window.",
+              "proposition_id": "target.2018_12546.exp2.control.influxdb.I"
+            },
+            "A": {
+              "state": "U",
+              "evidence_class": "EVIDENCE_GAP",
+              "source": "No confidentiality or availability experiment",
+              "evidence": [],
+              "reason": "The controlled experiment tested an integrity-policy consequence only; it does not establish C or A.",
+              "scope": "Experiment-specific observation window only.",
+              "proposition_id": "target.2018_12546.exp2.control.influxdb.A"
+            }
+          },
+          "transitions": [
+            {
+              "step_id": "exp2-12546-control-mqtt-to-ditto",
+              "source_deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+              "target_deployment_id": "docker-connectivity-1",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.control.mosquitto_to_ditto",
+              "cve_ids": [],
+              "reproduction_grades": {},
+              "conditions": {
+                "A": {
+                  "proposition_id": "cve.2018_12546.exp2.control.applicability"
+                },
+                "G": {
+                  "proposition_id": "attacker.2018_12546.exp2.control.authenticated_publisher"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.control.broker_configuration"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.control.mosquitto_to_ditto"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.control.retained_command"
+                },
+                "Y": {
+                  "proposition_id": "receiver.ditto.2018_12546.exp2.control.retained_processing"
+                }
+              }
+            },
+            {
+              "step_id": "exp2-12546-control-ditto-to-influx",
+              "source_deployment_id": "docker-connectivity-1",
+              "target_deployment_id": "influxdb-lab",
+              "transition_type": "DF",
+              "relationship_id": "relationship.2018_12546.exp2.control.ditto_to_influx",
+              "cve_ids": [],
+              "conditions": {
+                "A": {
+                  "proposition_id": "unresolved.2018_12546.cve_free_step.A"
+                },
+                "G": {
+                  "proposition_id": "unresolved.2018_12546.cve_free_step.G"
+                },
+                "H": {
+                  "proposition_id": "preconditions.2018_12546.exp2.control.ditto_to_influx_write"
+                },
+                "B": {
+                  "proposition_id": "architecture.2018_12546.exp2.control.ditto_to_influx"
+                },
+                "K": {
+                  "proposition_id": "capability.2018_12546.exp2.control.cve_effect_carried_to_influx"
+                },
+                "Y": {
+                  "proposition_id": "receiver.influxdb.2018_12546.exp2.control.retained_processing"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "validation_records": [
+    {
+      "validation_record_id": "EXP2-12546-VULNERABLE-REPRODUCTION",
+      "deployment_id": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+      "cve_id": "CVE-2018-12546",
+      "reproduction_grade": "INDEPENDENTLY_REPRODUCED",
+      "independently_reproduced": true,
+      "observation_window_utc": {
+        "start": "2026-11-18T20:09:24.963314Z",
+        "stop": "2026-11-18T20:11:50.141114Z"
+      },
+      "broker_configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\n",
+      "evidence": [
+        "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json"
+      ],
+      "result": "POLICY_VIOLATION_OBSERVED",
+      "scope": "Temporary vulnerable Lab experiment only."
+    },
+    {
+      "validation_record_id": "EXP2-12546-CONTROL-REPRODUCTION",
+      "deployment_id": "iomt-cve12546-down-control-c4c0a63d22",
+      "cve_id": "CVE-2018-12546",
+      "reproduction_grade": "REPRODUCTION_FAILED",
+      "independently_reproduced": false,
+      "observation_window_utc": {
+        "start": "2026-11-18T20:09:24.963314Z",
+        "stop": "2026-11-18T20:11:50.141114Z"
+      },
+      "broker_configuration": "listener 1883 0.0.0.0\nprotocol mqtt\nallow_anonymous false\npassword_file /mosquitto/config/passwd\nacl_file /mosquitto/config/aclfile\npersistence false\nlog_dest stdout\nlog_type all\ncheck_retain_source true\n",
+      "evidence": [
+        "output\\evidence_runs\\cve-2018-12546-retained-acl-20261118T195233320714Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z.json",
+        "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json"
+      ],
+      "result": "POLICY_HELD",
+      "scope": "Intentional control; the vulnerable retained-delivery behaviour was not reproduced with check_retain_source=true."
+    }
+  ],
+  "observations": [
+    {
+      "observation_id": "cve-2018-12546-retained-acl-20261118T195233320714Z",
+      "evidence_class": "CONTROLLED_REPRODUCTION_EXPERIMENT_1",
+      "deployments": {
+        "vulnerable": "iomt-cve12546-vuln-b7c3ae4e",
+        "control": "iomt-cve12546-control-28ae20e7"
+      },
+      "window_utc": {
+        "start": "2026-11-18T19:52:33.321518Z",
+        "stop": "2026-11-18T19:53:11.741624Z"
+      },
+      "result": {
+        "outcome": "PAIRED_DIFFERENCE_OBSERVED",
+        "supports_cve_broker_behaviour_reproduction": true,
+        "summary": "The vulnerable arm delivered the old retained marker after revocation; the configured control withdrew it.",
+        "does_not_establish": [
+          "target confidentiality, integrity or availability magnitude",
+          "downstream Ditto or InfluxDB impact",
+          "attack feasibility outside the tested ACL transition",
+          "that Mosquitto 2.1.2 is generally secure"
+        ]
+      },
+      "limitations": [
+        "This is one controlled retained-message/ACL transition, not an attack chain.",
+        "Delivery does not establish a numerical confidentiality, integrity or availability consequence.",
+        "Ditto and InfluxDB were not connected and no downstream impact was tested.",
+        "QoS 1 delivery is not treated as proof of permission; ACL denial was checked separately.",
+        "The control result applies only with check_retain_source=true and the recorded topic/ACL configuration.",
+        "The historical CVE-2018-12546 observation remains MANUALLY_OBSERVED; this run is separate evidence."
+      ]
+    },
+    {
+      "observation_id": "cve-2018-12546-downstream-20261118T200923198752Z",
+      "evidence_class": "CONTROLLED_REPRODUCTION_EXPERIMENT_2",
+      "deployments": {
+        "vulnerable": "iomt-cve12546-down-vulnerable-00e1c6ba6c",
+        "control": "iomt-cve12546-down-control-c4c0a63d22",
+        "ditto": "docker-connectivity-1",
+        "influxdb": "influxdb-lab"
+      },
+      "window_utc": {
+        "start": "2026-11-18T20:09:24.963314Z",
+        "stop": "2026-11-18T20:11:50.141114Z"
+      },
+      "result": {
+        "outcome": "PAIRED_DOWNSTREAM_DIFFERENCE_OBSERVED",
+        "summary": "The vulnerable retained command changed the isolated Thing and produced telemetry after verified revocation; the control withheld it.",
+        "cleanup_verified": true,
+        "assessment_boundary": "The result concerns downstream policy compliance in this lab. It does not establish clinical harm or C/I/A numerical impact."
+      },
+      "vulnerable_thing_id": "iomt:cve12546-vulnerable-9f6efabe1e-00e1c6ba6c",
+      "control_thing_id": "iomt:cve12546-control-9f6efabe1e-c4c0a63d22",
+      "vulnerable_retained_rows": [
+        {
+          "time": "2026-11-18T20:10:26.0464382Z",
+          "value": 42.75,
+          "run_marker": "CVE12546-REVOKED-RETAINED-VULNERABLE-00e1c6ba6c",
+          "thing_id": "iomt:cve12546-vulnerable-9f6efabe1e-00e1c6ba6c",
+          "table": "0"
+        },
+        {
+          "time": "2026-11-18T20:10:26.2222261Z",
+          "value": 42.75,
+          "run_marker": "CVE12546-REVOKED-RETAINED-VULNERABLE-00e1c6ba6c",
+          "thing_id": "iomt:cve12546-vulnerable-9f6efabe1e-00e1c6ba6c",
+          "table": "0"
+        }
+      ],
+      "control_retained_row_count": 0,
+      "control_support_rows": [
+        {
+          "time": "2026-11-18T20:10:54.5185371Z",
+          "value": 41.25,
+          "run_marker": "CVE12546-NORMAL-CONTROL-c4c0a63d22",
+          "thing_id": "iomt:cve12546-control-9f6efabe1e-c4c0a63d22",
+          "table": "0"
+        },
+        {
+          "time": "2026-11-18T20:11:45.7834545Z",
+          "value": 40.5,
+          "run_marker": "CVE12546-POST-CONTROL-CONTROL-c4c0a63d22",
+          "thing_id": "iomt:cve12546-control-9f6efabe1e-c4c0a63d22",
+          "table": "1"
+        }
+      ],
+      "scope_limit": "Integrity-policy consequences in temporary deployments; numerical magnitudes remain UNQUANTIFIED."
+    }
+  ],
+  "readback_verification": {
+    "record": "output\\evidence_runs\\cve-2018-12546-downstream-20261118T200923198752Z-readback.json",
+    "status": "CONFIRMED",
+    "result": "PAIRED_DOWNSTREAM_DIFFERENCE_CONFIRMED",
+    "evidence_unchanged": true,
+    "vulnerable_row_count": 2,
+    "control_row_count": 0,
+    "duplicate_rows": true,
+    "duplicate_cause": "UNKNOWN"
+  },
+  "experiment_reproduction_scope": {
+    "vulnerable": {
+      "source_observation": "INDEPENDENTLY_REPRODUCED",
+      "downstream_cve_specific_observation": "DITTO_AND_INFLUXDB_POLICY_EFFECT_OBSERVED",
+      "normal_path": "VERIFIED_IN_BOTH_ARMS",
+      "target_magnitude": "UNQUANTIFIED"
+    },
+    "control": {
+      "source_observation": "CONTROL_BEHAVIOUR_OBSERVED",
+      "downstream_cve_specific_observation": "NO_RETAINED_EFFECT",
+      "normal_path": "VERIFIED_IN_BOTH_ARMS",
+      "target_magnitude": "NOT_APPLICABLE_TO_OBSERVED_EVENT"
+    },
+    "baseline_transfer": "NOT_PERFORMED",
+    "historical_manual_record": "PRESERVED_SEPARATELY"
+  }
+}

@@ -21,6 +21,7 @@
 # ---------------------------------------------------------
 
 import argparse
+from datetime import datetime, timezone
 import json
 
 from applicability import (
@@ -416,6 +417,7 @@ def main():
             "received": retrieval["received"],
             "total_results": retrieval["total_results"],
             "error": retrieval["error"],
+            "recorded_at_utc": datetime.now(timezone.utc).isoformat(),
         }
 
         result = build_component_baseline(

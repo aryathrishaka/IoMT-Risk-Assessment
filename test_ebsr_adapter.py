@@ -507,6 +507,122 @@ class AdapterIntegrationTests(unittest.TestCase):
         )
         self.assertEqual(path["gate_status"], "T")
 
+    def test_source_cve_can_flow_through_non_cve_transition(self):
+        document = base_bundle()
+        document["architecture_evidence"].append(
+            relationship(
+                "ditto-to-influx-data-plane",
+                "ditto-prod",
+                "influx-prod",
+                "LX",
+                "SUPPORTED",
+            )
+        )
+        document["scenarios"] = [{
+            "scenario_id": "SYN-MIXED-CHAIN",
+            "attacker_id": "ATTACKER-A",
+            "target_deployment_id": "influx-prod",
+            "paths": [{
+                "path_id": "source-cve-then-data-plane",
+                "target_deployment_id": "influx-prod",
+                "target_channels": target_channels(
+                    i=True,
+                    i_magnitude=0.56,
+                ),
+                "transitions": [
+                    {
+                        "step_id": "mosq-to-ditto",
+                        "source_deployment_id": "mosq-vuln",
+                        "target_deployment_id": "ditto-prod",
+                        "transition_type": "DF",
+                        "relationship_id": "mq-to-ditto",
+                        "cve_ids": ["CVE-SYNTH-MQ"],
+                        "conditions": all_true_conditions(),
+                    },
+                    {
+                        "step_id": "ditto-to-influx",
+                        "source_deployment_id": "ditto-prod",
+                        "target_deployment_id": "influx-prod",
+                        "transition_type": "LX",
+                        "relationship_id": "ditto-to-influx-data-plane",
+                        "cve_ids": [],
+                        "conditions": all_true_conditions(),
+                    },
+                ],
+            }],
+        }]
+
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+        path = report["scenario_results"][0]["paths"][0]
+
+        self.assertEqual(
+            path["transitions"][1]["cve_ids"],
+            [],
+        )
+        self.assertEqual(
+            path["vulnerability_ids"],
+            ["CVE-SYNTH-MQ"],
+        )
+        self.assertEqual(
+            path["feasibility"]["quantification_scope"],
+            "CONDITIONAL_TECHNICAL_EXPLOITABILITY",
+        )
+        self.assertFalse(
+            path["feasibility"][
+                "complete_path_feasibility_quantified"
+            ]
+        )
+        self.assertAlmostEqual(
+            path["feasibility"]["interval"][0],
+            0.729411765,
+            places=8,
+        )
+
+    def test_path_without_cve_steps_remains_unquantified(self):
+        document = base_bundle()
+        conditions = all_true_conditions()
+        conditions["B"] = {
+            "status": "T",
+            "evidence": ["Synthetic direct data-plane condition."],
+        }
+        document["scenarios"] = [{
+            "scenario_id": "SYN-NO-CVE",
+            "attacker_id": "ATTACKER-A",
+            "target_deployment_id": "mosq-vuln",
+            "paths": [{
+                "path_id": "no-cve-direct",
+                "target_deployment_id": "mosq-vuln",
+                "target_channels": target_channels(
+                    i=True,
+                    i_magnitude=0.56,
+                ),
+                "transitions": [{
+                    "step_id": "direct",
+                    "source_deployment_id": "mosq-vuln",
+                    "target_deployment_id": "mosq-vuln",
+                    "transition_type": "DIRECT",
+                    "cve_ids": [],
+                    "conditions": conditions,
+                }],
+            }],
+        }]
+
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+        path = report["scenario_results"][0]["paths"][0]
+
+        self.assertEqual(path["vulnerability_ids"], [])
+        self.assertEqual(
+            path["feasibility"]["status"],
+            "UNQUANTIFIED",
+        )
+        self.assertIsNone(path["feasibility"]["interval"])
+
     def test_non_ordered_transition_chain_is_rejected(self):
         document = base_bundle()
         document["scenarios"] = [{
@@ -547,6 +663,58 @@ class AdapterIntegrationTests(unittest.TestCase):
         self.assertEqual(report["scenario_results"], [])
         self.assertTrue(any(
             "not an ordered deployment chain" in error["reason"]
+            for error in report["scenario_errors"]
+        ))
+
+    def test_repeated_cve_step_is_not_silently_rebound(self):
+        document = base_bundle()
+        document["architecture_evidence"].append(
+            relationship(
+                "ditto-to-influx-duplicate-cve",
+                "ditto-prod",
+                "influx-prod",
+                "LX",
+                "SUPPORTED",
+            )
+        )
+        document["scenarios"] = [{
+            "scenario_id": "SYN-DUPLICATE-CVE",
+            "attacker_id": "ATTACKER-A",
+            "target_deployment_id": "influx-prod",
+            "paths": [{
+                "path_id": "duplicate-cve",
+                "target_channels": target_channels(),
+                "transitions": [
+                    {
+                        "step_id": "one",
+                        "source_deployment_id": "mosq-vuln",
+                        "target_deployment_id": "ditto-prod",
+                        "transition_type": "DF",
+                        "relationship_id": "mq-to-ditto",
+                        "cve_ids": ["CVE-SYNTH-MQ"],
+                        "conditions": all_true_conditions(),
+                    },
+                    {
+                        "step_id": "two",
+                        "source_deployment_id": "ditto-prod",
+                        "target_deployment_id": "influx-prod",
+                        "transition_type": "LX",
+                        "relationship_id": "ditto-to-influx-duplicate-cve",
+                        "cve_ids": ["CVE-SYNTH-MQ"],
+                        "conditions": all_true_conditions(),
+                    },
+                ],
+            }],
+        }]
+
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+
+        self.assertEqual(report["scenario_results"], [])
+        self.assertTrue(any(
+            "repeats CVE step" in error["reason"]
             for error in report["scenario_errors"]
         ))
 
@@ -754,7 +922,7 @@ class AdapterIntegrationTests(unittest.TestCase):
 
         self.assertEqual(b_record["status"], "U")
         self.assertIn(
-            "no explicit DF/LX/CT",
+            "Missing explicit DF/LX/CT",
             " ".join(
                 source.get("reason") or ""
                 for source in b_record["sources"]
@@ -762,7 +930,7 @@ class AdapterIntegrationTests(unittest.TestCase):
         )
         self.assertNotEqual(path["gate_status"], "T")
 
-    def test_relationship_type_mismatch_is_conflict(self):
+    def test_nonmatching_relationship_type_remains_unknown(self):
         document = base_bundle()
         document["architecture_evidence"][0][
             "transition_type"
@@ -777,8 +945,127 @@ class AdapterIntegrationTests(unittest.TestCase):
             "condition_proposition_ids"
         ]["B"]
 
-        self.assertEqual(report["propositions"][b_id]["status"], "X")
-        self.assertEqual(path["gate_status"], "X")
+        self.assertEqual(report["propositions"][b_id]["status"], "U")
+        self.assertEqual(path["gate_status"], "U")
+        self.assertEqual(
+            path["transitions"][0][
+                "ignored_relationship_records"
+            ][0]["record"]["transition_type"],
+            "CT",
+        )
+
+    def test_df_record_does_not_contradict_lx_proposition(self):
+        document = base_bundle()
+        document["architecture_evidence"].append(
+            relationship(
+                "ditto-to-influx-mixed-types",
+                "ditto-prod",
+                "influx-prod",
+                "DF",
+                "SUPPORTED",
+            )
+        )
+        document["architecture_evidence"].append(
+            relationship(
+                "ditto-to-influx-mixed-types",
+                "ditto-prod",
+                "influx-prod",
+                "LX",
+                "SUPPORTED",
+            )
+        )
+        document["scenarios"] = [{
+            "scenario_id": "SYN-LX-ONLY",
+            "attacker_id": "ATTACKER-A",
+            "target_deployment_id": "influx-prod",
+            "paths": [{
+                "path_id": "lx-only",
+                "target_deployment_id": "influx-prod",
+                "target_channels": target_channels(),
+                "transitions": [{
+                    "step_id": "ditto-to-influx",
+                    "source_deployment_id": "ditto-prod",
+                    "target_deployment_id": "influx-prod",
+                    "transition_type": "LX",
+                    "relationship_id": "ditto-to-influx-mixed-types",
+                    "cve_ids": ["CVE-SYNTH-DITTO"],
+                    "conditions": all_true_conditions(),
+                }],
+            }],
+        }]
+
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+        path = report["scenario_results"][0]["paths"][0]
+
+        self.assertEqual(path["gate_status"], "T")
+        self.assertEqual(
+            len(path["transitions"][0]["relationship_records"]),
+            1,
+        )
+        self.assertEqual(
+            path["transitions"][0]["relationship_records"][0][
+                "transition_type"
+            ],
+            "LX",
+        )
+        self.assertEqual(
+            path["transitions"][0][
+                "ignored_relationship_records"
+            ][0]["record"]["transition_type"],
+            "DF",
+        )
+
+    def test_df_record_does_not_contradict_ct_proposition(self):
+        document = base_bundle()
+        document["architecture_evidence"].append(
+            relationship(
+                "ditto-to-influx-df-only",
+                "ditto-prod",
+                "influx-prod",
+                "DF",
+                "SUPPORTED",
+            )
+        )
+        document["scenarios"] = [{
+            "scenario_id": "SYN-CT-NO-EVIDENCE",
+            "attacker_id": "ATTACKER-A",
+            "target_deployment_id": "influx-prod",
+            "paths": [{
+                "path_id": "ct-requires-own-evidence",
+                "target_deployment_id": "influx-prod",
+                "target_channels": target_channels(),
+                "transitions": [{
+                    "step_id": "ditto-to-influx",
+                    "source_deployment_id": "ditto-prod",
+                    "target_deployment_id": "influx-prod",
+                    "transition_type": "CT",
+                    "relationship_id": "ditto-to-influx-df-only",
+                    "cve_ids": ["CVE-SYNTH-DITTO"],
+                    "conditions": all_true_conditions(),
+                }],
+            }],
+        }]
+
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+        path = report["scenario_results"][0]["paths"][0]
+        b_id = path["transitions"][0][
+            "condition_proposition_ids"
+        ]["B"]
+
+        self.assertEqual(report["propositions"][b_id]["status"], "U")
+        self.assertEqual(path["gate_status"], "U")
+        self.assertEqual(
+            path["transitions"][0][
+                "ignored_relationship_records"
+            ][0]["record"]["transition_type"],
+            "DF",
+        )
 
     def test_direct_source_impact_profile_is_supported(self):
         document = base_bundle()
@@ -956,6 +1243,61 @@ class AdapterIntegrationTests(unittest.TestCase):
         self.assertIn("No matching scenario", record["reason"])
         self.assertNotEqual(record["status"], "ZERO")
 
+    def test_unknown_cve_is_not_described_as_affected(self):
+        report = ebsr_adapter.build_assessment(
+            base_bundle(),
+            generated_at=FIXED_TIME,
+        )
+        record = next(
+            item
+            for item in report["not_assessed_cves"]
+            if item["cve_id"] == "CVE-SYNTH-DITTO-UNKNOWN"
+        )
+
+        self.assertEqual(record["status"], "NOT_ASSESSED")
+        self.assertEqual(record["applicability_status"], "UNKNOWN")
+        self.assertIn("applicability is UNKNOWN", record["reason"])
+        self.assertIn("not confirmed affected", record["reason"])
+        self.assertNotIn("this affected CVE", record["reason"])
+
+    def test_not_assessed_console_is_grouped_by_status_and_reason(self):
+        report = ebsr_adapter.build_assessment(
+            base_bundle(),
+            generated_at=FIXED_TIME,
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            ebsr_adapter.print_assessment_summary(report)
+
+        printed = output.getvalue()
+        self.assertIn("NOT_ASSESSED CVE records grouped by applicability", printed)
+        self.assertIn("AFFECTED (2 records)", printed)
+        self.assertIn("UNKNOWN (1 record)", printed)
+        self.assertIn("CVE-SYNTH-MQ-NO-SCENARIO", printed)
+        self.assertIn("CVE-SYNTH-DITTO-UNKNOWN", printed)
+
+    def test_no_scenario_console_explains_how_to_supply_scenarios(self):
+        document = base_bundle()
+        document["scenarios"] = []
+        report = ebsr_adapter.build_assessment(
+            document,
+            generated_at=FIXED_TIME,
+        )
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            ebsr_adapter.print_assessment_summary(report)
+
+        printed = output.getvalue()
+        self.assertIn("Scenario result: NOT_ASSESSED", printed)
+        self.assertIn("--ebsr-scenarios <path>", printed)
+        self.assertTrue(all(
+            "No deployment scenario definitions were supplied."
+            in record["reason"]
+            for record in report["not_assessed_cves"]
+        ))
+
     def test_failed_retrieval_does_not_imply_absence(self):
         document = base_bundle()
         failed = assessment_record(
@@ -1054,6 +1396,14 @@ class AdapterIntegrationTests(unittest.TestCase):
         self.assertIn("omitted", report["propositions"][y_id]["reason"])
         self.assertNotEqual(path["gate_status"], "T")
         self.assertEqual(path["feasibility"]["status"], "UNCERTAIN")
+        self.assertNotIn(
+            "CVE-SYNTH-MQ",
+            {
+                record["cve_id"]
+                for record in report["not_assessed_cves"]
+                if record["deployment_id"] == "mosq-vuln"
+            },
+        )
 
     def test_missing_relationship_evidence_keeps_b_unknown(self):
         document = base_bundle()
@@ -1190,7 +1540,19 @@ class AdapterIntegrationTests(unittest.TestCase):
         self.assertIn("scenario_results", decoded)
         self.assertIn("target_profiles", decoded)
         self.assertIn("decision_trace", decoded)
+        self.assertIn("applicability_accounting", decoded)
         self.assertIn("not_assessed_cves", decoded)
+        self.assertIn("not_assessed_groups", decoded)
+        statuses = {
+            record["applicability_status"]
+            for record in decoded["not_assessed_cves"]
+        }
+        self.assertEqual(statuses, {"AFFECTED", "UNKNOWN"})
+        self.assertTrue(all(
+            "applicability_reason" in record
+            and "applicability" in record
+            for record in decoded["not_assessed_cves"]
+        ))
 
     def test_offline_replay_reproduces_scenario_results(self):
         report = ebsr_adapter.build_assessment(
@@ -1420,7 +1782,12 @@ class MainWorkflowTests(unittest.TestCase):
                     with patch.object(
                         main,
                         "get_attack_path",
-                        return_value=["Mosquitto"],
+                        return_value=[
+                            "Mosquitto",
+                            "Eclipse Ditto",
+                            "InfluxDB",
+                            "Healthcare Monitoring",
+                        ],
                     ):
                         with patch(
                             "builtins.input",
@@ -1432,6 +1799,20 @@ class MainWorkflowTests(unittest.TestCase):
         self.assertEqual(report, None)
         printed = output.getvalue()
         self.assertIn("Scenario result: NOT_ASSESSED", printed)
+        self.assertIn("--ebsr-scenarios", printed)
+        self.assertIn(
+            "Selected CVE scenario coverage: NOT_ASSESSED",
+            printed
+        )
+        self.assertIn("Candidate Architecture Route", printed)
+        self.assertIn(
+            "does not establish attack feasibility",
+            printed
+        )
+        self.assertIn(
+            "Healthcare Monitoring is included only as contextual",
+            printed
+        )
         self.assertIn("CVE-SYNTH-MQ", printed)
 
     def test_main_persists_failed_empty_and_unassessed_outcomes(self):

@@ -456,6 +456,141 @@ class MainApplicabilityTests(unittest.TestCase):
             ],
             ["AFFECTED", "UNKNOWN", "NOT_AFFECTED"]
         )
+        self.assertEqual(
+            retrieval["assessment_accounting"],
+            {
+                "retrieved": 3,
+                "affected": 1,
+                "not_affected": 1,
+                "unknown": 1,
+                "classified": 3,
+                "skipped": 0,
+                "errors": 0,
+                "reconciled": True,
+            },
+        )
+
+    def test_applicability_summary_displays_reconciled_counts(self):
+        retrieval = retrieval_result(
+            items=[
+                cve_record("CVE-AFFECTED"),
+                cve_record("CVE-NOT-AFFECTED"),
+                cve_record("CVE-UNKNOWN"),
+            ]
+        )
+        retrieval["assessments"] = {
+            "affected": [{"cve_id": "CVE-AFFECTED"}],
+            "not_affected": [{"cve_id": "CVE-NOT-AFFECTED"}],
+            "unknown": [{"cve_id": "CVE-UNKNOWN"}],
+        }
+        retrieval["assessment_errors"] = []
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            main.show_applicability_summary(retrieval)
+
+        printed = output.getvalue()
+        self.assertIn("Retrieved unique valid CVEs: 3", printed)
+        self.assertIn("AFFECTED: 1", printed)
+        self.assertIn("NOT_AFFECTED: 1", printed)
+        self.assertIn("UNKNOWN: 1", printed)
+        self.assertIn("Skipped records: 0", printed)
+        self.assertIn("Assessment errors: 0", printed)
+
+    def test_applicability_errors_are_counted_separately(self):
+        record = cve_record("CVE-ERROR")
+
+        with patch.object(
+            main,
+            "search_cves_by_keyword_with_status",
+            return_value=retrieval_result(items=[record])
+        ):
+            with patch.object(
+                main,
+                "evaluate_applicability",
+                side_effect=ValueError("bad CPE tree")
+            ):
+                with redirect_stdout(io.StringIO()):
+                    affected, unknown, retrieval = (
+                        main.get_vulnerabilities(
+                            "Mosquitto",
+                            "mosquitto",
+                            "1.5.5"
+                        )
+                    )
+
+        self.assertEqual(affected, [])
+        self.assertEqual(unknown, [])
+        self.assertEqual(
+            retrieval["assessment_accounting"],
+            {
+                "retrieved": 1,
+                "affected": 0,
+                "not_affected": 0,
+                "unknown": 0,
+                "classified": 0,
+                "skipped": 0,
+                "errors": 1,
+                "reconciled": True,
+            },
+        )
+
+    def test_37_record_mixed_status_profile_reconciles_exactly(self):
+        records = [
+            cve_record(f"CVE-MIXED-{index}")
+            for index in range(37)
+        ]
+        statuses = (
+            ["AFFECTED"] * 10
+            + ["NOT_AFFECTED"] * 23
+            + ["UNKNOWN"] * 4
+        )
+        provenance = [
+            applicability_result(
+                status,
+                f"Preserved reason for {status}."
+            )
+            for status in statuses
+        ]
+
+        with patch.object(
+            main,
+            "search_cves_by_keyword_with_status",
+            return_value=retrieval_result(items=records)
+        ):
+            with patch.object(
+                main,
+                "evaluate_applicability",
+                side_effect=provenance
+            ):
+                with redirect_stdout(io.StringIO()):
+                    affected, unknown, retrieval = (
+                        main.get_vulnerabilities(
+                            "mosquitto",
+                            "mosquitto",
+                            "1.5.5"
+                        )
+                    )
+
+        self.assertEqual(len(affected), 10)
+        self.assertEqual(len(unknown), 4)
+        self.assertEqual(
+            len(retrieval["assessments"]["not_affected"]),
+            23
+        )
+        self.assertEqual(
+            retrieval["assessment_accounting"],
+            {
+                "retrieved": 37,
+                "affected": 10,
+                "not_affected": 23,
+                "unknown": 4,
+                "classified": 37,
+                "skipped": 0,
+                "errors": 0,
+                "reconciled": True,
+            },
+        )
 
     def test_unsupported_component_remains_unknown(self):
         record = cve_record("CVE-LAB")
@@ -500,6 +635,36 @@ class MainApplicabilityTests(unittest.TestCase):
         self.assertIn("CVE-UNKNOWN", printed)
         self.assertIn("NVD has no CPE configuration.", printed)
         self.assertIn("not confirmed as affecting", printed)
+
+    def test_v30_only_vector_is_not_used_for_ebsr_index(self):
+        info = {
+            "id": "CVE-V30",
+            "cvss_version": "3.0",
+            "cvss_score": 7.5,
+            "cvss_vector": (
+                "CVSS:3.0/AV:N/AC:L/PR:N/UI:N/"
+                "S:U/C:H/I:H/A:H"
+            ),
+        }
+        output = io.StringIO()
+
+        with redirect_stdout(output):
+            result = main.assess_cvss(info)
+
+        self.assertIsNotNone(result)
+        printed = output.getvalue()
+        self.assertIn(
+            "EBSR v3.1 exploitability index: UNQUANTIFIED",
+            printed
+        )
+        self.assertIn(
+            "not relabelled or converted to CVSS v3.1",
+            printed
+        )
+        self.assertIn(
+            "FALSE mandatory path condition still yields ZERO",
+            printed
+        )
 
     def test_main_call_site_passes_exact_component_and_search_term(self):
         detected = {

@@ -3,6 +3,7 @@
 import json
 import re
 import subprocess
+from urllib.parse import urlsplit
 
 
 DOCKER_TIMEOUT_SECONDS = 10
@@ -532,6 +533,55 @@ def _probe_mosquitto(container_id, run_docker):
     }
 
 
+def _architecture_metadata(container):
+    """Retain only network-scoped names and host references from known endpoint settings."""
+    networks = {}
+    network_settings = container.get("NetworkSettings")
+    entries = network_settings.get("Networks") if isinstance(network_settings, dict) else None
+    for network, settings in entries.items() if isinstance(entries, dict) else ():
+        aliases = settings.get("Aliases") if isinstance(settings, dict) else None
+        names = list(aliases) if isinstance(aliases, list) else []
+        if isinstance(container.get("Name"), str):
+            names.append(container["Name"].lstrip("/"))
+        networks[network] = sorted({n.lower() for n in names if isinstance(n, str) and n})
+    endpoints = {}
+    config = container.get("Config")
+    env = config.get("Env") if isinstance(config, dict) else None
+    for setting in env if isinstance(env, list) else ():
+        if not isinstance(setting, str):
+            continue
+        key, _, value = setting.partition("=")
+        if key not in {"MQTT_HOST", "MQTT_BROKER_HOST", "MQTT_BROKER_URL", "INFLUXDB_URL", "INFLUXDB_HOST"}:
+            continue
+        try:
+            host = urlsplit(value if "://" in value else "//" + value).hostname
+        except ValueError:
+            continue
+        if host and re.fullmatch(r"[a-z0-9][a-z0-9.-]*", host):
+            endpoints[key] = host
+    ports = {}
+    published = network_settings.get("Ports") if isinstance(network_settings, dict) else {}
+    for key, bindings in (published or {}).items() if isinstance(published, dict) else ():
+        if re.fullmatch(r"[0-9]+/tcp", key):
+            ports[key] = [int(b["HostPort"]) for b in bindings or [] if isinstance(b, dict)
+                          and b.get("HostIp") in ("127.0.0.1", "0.0.0.0") and
+                          str(b.get("HostPort", "")).isdigit() and 0 < int(b["HostPort"]) < 65536]
+    labels = config.get("Labels") if isinstance(config, dict) else {}
+    labels = labels if isinstance(labels, dict) else {}
+    state = container.get("State") or {}
+    args = container.get("Args")
+    config_path = None
+    if isinstance(args, list) and "-c" in args and args.index("-c") + 1 < len(args):
+        requested = args[args.index("-c") + 1]
+        config_path = requested if requested in ("/etc/mosquitto/mosquitto.conf", "/mosquitto/config/mosquitto.conf") else "custom"
+    return {"container_name": container.get("Name") if isinstance(container.get("Name"), str) else "",
+            "config_path": config_path, "member_id": container.get("Id"), "image_id": container.get("Image"),
+            "started_at": state.get("StartedAt") if isinstance(state, dict) else None,
+            "service": labels.get("com.docker.compose.service"), "published_tcp": ports,
+            "networks": networks, "endpoint_hosts": endpoints,
+            "runtime": container["State"].get("Status") if isinstance(container.get("State"), dict) else None}
+
+
 def _classify_container(container, image_info, runtime_probe=None):
     config = container.get("Config")
 
@@ -652,8 +702,11 @@ def _classify_container(container, image_info, runtime_probe=None):
         and status == INSTANCE_DETECTED
     )
 
+    digest = _select_digest(reference, reference["repository"], image_info)
     return {
         "instance_id": container.get("Id"),
+        "architecture_metadata": {**_architecture_metadata(container), "runtime_version":version,
+                                  "image_digest":digest},
         "container_names": [container_name] if container_name else [],
         "compose_project": project,
         "compose_service": service,
@@ -680,11 +733,7 @@ def _classify_container(container, image_info, runtime_probe=None):
         "image_reference": image_reference,
         "image_repository": reference["repository"],
         "image_tag": reference["tag"],
-        "image_digest": _select_digest(
-            reference,
-            reference["repository"],
-            image_info
-        ),
+        "image_digest": digest,
         "image_id": (
             container.get("Image")
             or (image_info or {}).get("Id")
@@ -1007,6 +1056,8 @@ def _ditto_compatibility_record(summary, instances):
         "display_name": summary["display_name"],
         "architecture_component": summary["display_name"],
         "deployment_id": summary.get("deployment_id"),
+        "container_ids": sorted(instance_id for instance_id in instance_ids if instance_id),
+        "architecture_metadata": [i.get("architecture_metadata", {}) for i in ditto_instances],
         "container": ", ".join(
             name
             for instance in ditto_instances
@@ -1165,6 +1216,8 @@ def detect_versions(run_docker=None):
                 ),
                 "architecture_component": definition["display_name"],
                 "deployment_id": instance.get("deployment_id"),
+                "container_ids": [instance["instance_id"]] if instance.get("instance_id") else [],
+                "architecture_metadata": [instance.get("architecture_metadata", {})],
                 "container": (
                     instance["container_names"][0]
                     if instance["container_names"]
@@ -1228,6 +1281,7 @@ def detect_versions(run_docker=None):
             )
             record = {
                 "component_id": None,
+                "architecture_metadata": [instance.get("architecture_metadata", {})],
                 "deployment_id": instance.get("deployment_id"),
                 "container": (
                     instance["container_names"][0]

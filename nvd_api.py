@@ -1056,6 +1056,10 @@ def extract_cve_information(cve_item):
     Extract CVE and CVSS information.
     """
 
+    # Import lazily to keep this reporting helper aligned with the existing
+    # applicability/CVSS policy without introducing a module import cycle.
+    from applicability import cvss_summary
+
     cve = cve_item.get("cve", {})
 
     cve_id = cve.get(
@@ -1142,12 +1146,37 @@ def extract_cve_information(cve_item):
             "vectorString"
         )
 
+    summary = cvss_summary(cve_item)
+    primary = summary.get("primary")
+    alternatives = [
+        dict(entry)
+        for entry in summary.get("other", []) or []
+        if entry.get("score") is not None
+    ]
+    cvss_source = None
+    cvss_source_type = None
+
+    if primary is not None:
+        cvss_version = primary.get("version")
+        cvss_score = primary.get("score")
+        cvss_vector = primary.get("vector")
+        cvss_source = primary.get("source")
+        cvss_source_type = primary.get("source_type")
+        alternatives = [
+            entry
+            for entry in alternatives
+            if entry.get("score") != cvss_score
+        ]
+
     return {
         "id": cve_id,
         "description": description,
         "cvss_version": cvss_version,
         "cvss_score": cvss_score,
-        "cvss_vector": cvss_vector
+        "cvss_vector": cvss_vector,
+        "cvss_source": cvss_source,
+        "cvss_source_type": cvss_source_type,
+        "cvss_alternatives": alternatives,
     }
 
 

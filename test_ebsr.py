@@ -239,6 +239,52 @@ class PathFeasibilityTests(unittest.TestCase):
             "UNQUANTIFIED"
         )
 
+    def test_v30_only_vector_preserves_false_and_conflict_precedence(self):
+        v30_vector = VECTOR.replace("CVSS:3.1", "CVSS:3.0")
+        false_result = ebsr.evaluate_path(
+            path(
+                "p-v30-false",
+                conditions=["failed"],
+                vulnerabilities=[
+                    vulnerability(vector=v30_vector)
+                ]
+            ),
+            {"failed": "F"}
+        )
+        conflict_result = ebsr.evaluate_path(
+            path(
+                "p-v30-conflict",
+                conditions=["conflict"],
+                vulnerabilities=[
+                    vulnerability(vector=v30_vector)
+                ]
+            ),
+            {"conflict": "X"}
+        )
+        unknown_result = ebsr.evaluate_path(
+            path(
+                "p-v30-unknown",
+                conditions=["unknown"],
+                vulnerabilities=[
+                    vulnerability(vector=v30_vector)
+                ]
+            ),
+            {"unknown": "U"}
+        )
+
+        self.assertEqual(
+            false_result["feasibility"]["status"],
+            "ZERO"
+        )
+        self.assertEqual(
+            conflict_result["feasibility"]["status"],
+            "X"
+        )
+        self.assertEqual(
+            unknown_result["feasibility"]["status"],
+            "UNQUANTIFIED"
+        )
+
     def test_path_without_vulnerability_is_unquantified(self):
         result = ebsr.evaluate_path(
             path(

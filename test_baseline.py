@@ -1,5 +1,6 @@
 """Offline tests: baseline classification and ranking."""
 
+from datetime import datetime, timedelta
 import json
 import os
 import sys
@@ -340,6 +341,9 @@ def test_baseline_main_preserves_multiple_deployments_and_statuses():
         assessed["Mosquitto [control]"]["retrieval"]["status"]
         == "FAILED"
     )
+    for row in assessed.values():
+        recorded_at = datetime.fromisoformat(row["retrieval"]["recorded_at_utc"])
+        assert recorded_at.utcoffset() == timedelta(0)
     assert diagnostics and diagnostics[0]["discovery_evidence"]["reason"] == "No product evidence."
 
 

@@ -473,12 +473,26 @@ def _affected_row(entries):
     return None
 
 
-def _cve_vector(row):
+def _cve_cvss_evidence(row):
     cvss = row.get("cvss", {})
     primary = cvss.get("primary") if isinstance(cvss, dict) else None
     if isinstance(primary, dict):
-        return primary.get("vector")
-    return row.get("cvss_vector")
+        return {
+            "vector": primary.get("vector"),
+            "version": primary.get("version"),
+            "score": primary.get("score"),
+            "severity": primary.get("severity"),
+            "source": primary.get("source"),
+            "source_type": primary.get("source_type"),
+        }
+    return {
+        "vector": row.get("cvss_vector"),
+        "version": row.get("cvss_version"),
+        "score": row.get("cvss_score"),
+        "severity": row.get("cvss_severity"),
+        "source": row.get("cvss_source"),
+        "source_type": row.get("cvss_source_type"),
+    }
 
 
 def _validation_records_for(
@@ -563,16 +577,17 @@ def _relationship_state(
     target_deployment_id,
     transition_type,
 ):
-    """Reconcile every relationship record sharing the requested ID."""
+    """Reconcile only evidence for the exact requested relationship."""
 
     if not relationship_id:
         return (
             ebsr.UNKNOWN,
             "No explicit architecture relationship ID was bound.",
             [],
+            [],
         )
 
-    matches = [
+    same_id_records = [
         relationship
         for relationship in architecture_evidence or []
         if (
@@ -581,51 +596,57 @@ def _relationship_state(
         )
     ]
 
-    if not matches:
+    if not same_id_records:
         return (
             ebsr.UNKNOWN,
             f"No architecture evidence exists for {relationship_id!r}.",
             [],
+            [],
         )
 
+    matches = []
+    ignored = []
     states = []
     reasons = []
 
-    for relationship in matches:
-
+    for relationship in same_id_records:
         source_id = relationship.get("source_deployment_id")
         target_id = relationship.get("target_deployment_id")
         explicit_type = relationship.get("transition_type")
-        legacy_type = relationship.get("relationship_type")
-        relationship_type = str(
-            explicit_type or legacy_type or ""
-        ).upper()
 
-        if not explicit_type or (
-            explicit_type is None
-            and relationship_type not in TRANSITION_TYPES
-        ):
-            states.append(ebsr.UNKNOWN)
-            reasons.append(
-                "A relationship record has no explicit DF/LX/CT "
-                "transition type."
-            )
+        if not explicit_type:
+            ignored.append({
+                "record": deepcopy(relationship),
+                "reason": "Missing explicit DF/LX/CT transition_type.",
+            })
             continue
 
-        if source_id != source_deployment_id or target_id != target_deployment_id:
-            states.append(ebsr.CONFLICT)
-            reasons.append(
-                "Relationship records disagree with the path endpoints."
-            )
+        relationship_type = str(explicit_type).upper()
+
+        if (
+            source_id != source_deployment_id
+            or target_id != target_deployment_id
+        ):
+            ignored.append({
+                "record": deepcopy(relationship),
+                "reason": (
+                    "Deployment endpoints identify a different "
+                    "relationship proposition."
+                ),
+            })
             continue
 
         if relationship_type != transition_type:
-            states.append(ebsr.CONFLICT)
-            reasons.append(
-                "Relationship records disagree with the path transition type."
-            )
+            ignored.append({
+                "record": deepcopy(relationship),
+                "reason": (
+                    f"Transition type {relationship_type} identifies a "
+                    f"different proposition from requested {transition_type}."
+                ),
+            })
             continue
 
+        matches.append(relationship)
         raw_status = str(
             relationship.get("status", "UNKNOWN")
         ).upper()
@@ -651,10 +672,34 @@ def _relationship_state(
         if relationship.get("notes"):
             reasons.append(relationship["notes"])
 
+    if not matches:
+        ignored_reasons = "; ".join(
+            dict.fromkeys(
+                item.get("reason")
+                for item in ignored
+                if item.get("reason")
+            )
+        )
+        return (
+            ebsr.UNKNOWN,
+            (
+                "No relationship evidence matches the requested deployment "
+                "endpoints and transition type."
+                + (
+                    f" Ignored nonmatching evidence: {ignored_reasons}"
+                    if ignored_reasons
+                    else ""
+                )
+            ),
+            [],
+            ignored,
+        )
+
     return (
         _merge_evidence_states(states),
         "; ".join(dict.fromkeys(reasons)) or None,
         deepcopy(matches),
+        ignored,
     )
 
 
@@ -919,6 +964,11 @@ def _assemble_path(
         applicability_states = []
 
         for cve_id in cve_ids:
+            if cve_id in cve_deployment_ids:
+                raise EBSRAdapterError(
+                    f"Path {path_id} repeats CVE step {cve_id!r}; "
+                    "each CVE step must have one deployment binding."
+                )
             entries = cve_index.get(
                 (source_deployment_id, cve_id),
                 [],
@@ -931,7 +981,8 @@ def _assemble_path(
                     "AFFECTED record."
                 )
 
-            vector = _cve_vector(row)
+            cvss_evidence = _cve_cvss_evidence(row)
+            vector = cvss_evidence["vector"]
             reproduction = _reproduction_evidence(
                 transition,
                 source_deployment_id,
@@ -945,7 +996,16 @@ def _assemble_path(
             source_impacts.append({
                 "deployment_id": source_deployment_id,
                 "cve_id": cve_id,
-                "cvss_v31_vector": vector,
+                "cvss_vector": vector,
+                "cvss_version": cvss_evidence["version"],
+                "cvss_score": cvss_evidence["score"],
+                "cvss_severity": cvss_evidence["severity"],
+                "cvss_source": cvss_evidence["source"],
+                "cvss_source_type": cvss_evidence["source_type"],
+                "ebsr_index_supported": (
+                    isinstance(vector, str)
+                    and vector.startswith("CVSS:3.1/")
+                ),
                 "source_impact": source_impact,
                 "note": (
                     "Source C/I/A weights and composite index are retained "
@@ -977,6 +1037,7 @@ def _assemble_path(
             )
 
         relationship_records = []
+        ignored_relationship_records = []
         relationship_proposition_id = None
 
         if source_deployment_id != target_deployment_id:
@@ -984,6 +1045,7 @@ def _assemble_path(
                 architecture_state,
                 architecture_reason,
                 relationship_records,
+                ignored_relationship_records,
             ) = _relationship_state(
                 relationships,
                 relationship_id,
@@ -1101,6 +1163,9 @@ def _assemble_path(
             "transition_type": transition_type,
             "relationship_id": relationship_id,
             "relationship_records": deepcopy(relationship_records),
+            "ignored_relationship_records": deepcopy(
+                ignored_relationship_records
+            ),
             "cve_ids": list(cve_ids),
             "condition_proposition_ids": dict(condition_refs),
             "action_condition_ids": unique_action_conditions,
@@ -1216,21 +1281,40 @@ def _assemble_path(
     return ebsr_path, all_cve_ids
 
 
-def _not_assessed_reason(record, retrieval):
+def _not_assessed_reason(record, retrieval, scenarios_present):
     reasons = []
     if retrieval.get("status") in ("FAILED", "MALFORMED", None):
         reasons.append(
             "The deployment CVE retrieval is not complete or reliable."
         )
-    reasons.append(
-        "No matching scenario definition covered this affected CVE."
-    )
+
+    applicability_status = record.get("status")
+
+    if not scenarios_present:
+        reasons.append(
+            "No deployment scenario definitions were supplied."
+        )
+    elif applicability_status == "UNKNOWN":
+        reasons.append(
+            "No EBSR path was evaluated because applicability is UNKNOWN; "
+            "this CVE is not confirmed affected."
+        )
+    else:
+        reasons.append(
+            "No matching scenario definition covered this deployment-specific "
+            "AFFECTED CVE."
+        )
+
     if record.get("reason"):
-        reasons.append(record["reason"])
+        reasons.append(f"Applicability reason: {record['reason']}")
     return " ".join(reasons)
 
 
-def _build_not_assessed(cve_assessments, covered):
+def _build_not_assessed(
+    cve_assessments,
+    covered,
+    scenarios_present=False,
+):
     result = []
     for assessment in cve_assessments or []:
         deployment_id = assessment.get("deployment_id")
@@ -1247,7 +1331,11 @@ def _build_not_assessed(cve_assessments, covered):
                 "cve_id": row.get("cve_id"),
                 "applicability_status": row.get("status"),
                 "status": "NOT_ASSESSED",
-                "reason": _not_assessed_reason(row, retrieval),
+                "reason": _not_assessed_reason(
+                    row,
+                    retrieval,
+                    scenarios_present,
+                ),
                 "retrieval_status": retrieval.get("status"),
                 "applicability_reason": row.get("reason"),
                 "applicability": deepcopy(
@@ -1255,6 +1343,273 @@ def _build_not_assessed(cve_assessments, covered):
                 ),
             })
     return result
+
+
+def group_not_assessed(records):
+    """Group NOT_ASSESSED records by applicability status and reason."""
+
+    grouped = {}
+
+    for record in records or []:
+        key = (
+            record.get("applicability_status") or "UNKNOWN",
+            record.get("reason") or "No reason recorded.",
+        )
+        group = grouped.setdefault(
+            key,
+            {
+                "applicability_status": key[0],
+                "reason": key[1],
+                "count": 0,
+                "cve_ids": [],
+                "deployment_ids": [],
+            },
+        )
+        group["count"] += 1
+        if record.get("cve_id"):
+            group["cve_ids"].append(record["cve_id"])
+        if record.get("deployment_id"):
+            group["deployment_ids"].append(record["deployment_id"])
+
+    result = list(grouped.values())
+
+    for group in result:
+        group["cve_ids"] = sorted(set(group["cve_ids"]))
+        group["deployment_ids"] = sorted(
+            set(group["deployment_ids"])
+        )
+
+    return sorted(
+        result,
+        key=lambda item: (
+            {"AFFECTED": 0, "UNKNOWN": 1}.get(
+                item["applicability_status"],
+                2,
+            ),
+            item["reason"],
+        ),
+    )
+
+
+def _cvss_entry_summary(entry):
+    if not isinstance(entry, dict):
+        return None
+    return {
+        "version": entry.get("version"),
+        "score": entry.get("score"),
+        "severity": entry.get("severity"),
+        "vector": entry.get("vector"),
+        "source": entry.get("source"),
+        "source_type": entry.get("source_type"),
+    }
+
+
+def _cvss_reporting(cve_assessments):
+    """Describe existing CVSS selection without recalculating any score."""
+
+    records = []
+    groups = (
+        ("AFFECTED", "affected"),
+        ("UNKNOWN", "unknown"),
+        ("NOT_AFFECTED", "not_affected"),
+    )
+    for assessment in cve_assessments or []:
+        deployment_id = assessment.get("deployment_id")
+        component_id = assessment.get("component_id")
+        for applicability_status, field in groups:
+            for row in assessment.get(field, []) or []:
+                summary = row.get("cvss") or {}
+                selected = _cvss_entry_summary(
+                    summary.get("primary")
+                )
+                alternatives = []
+                for entry in summary.get("other", []) or []:
+                    alternative = _cvss_entry_summary(entry)
+                    if (
+                        selected is not None
+                        and alternative is not None
+                        and alternative["score"] is not None
+                        and alternative["score"] != selected["score"]
+                    ):
+                        alternatives.append(alternative)
+                records.append(
+                    {
+                        "cve_id": row.get("cve_id"),
+                        "deployment_id": deployment_id,
+                        "component_id": component_id,
+                        "applicability_status": applicability_status,
+                        "selected": selected,
+                        "score_differing_alternatives": alternatives,
+                    }
+                )
+    return sorted(
+        records,
+        key=lambda item: (
+            str(item.get("deployment_id")),
+            str(item.get("cve_id")),
+        ),
+    )
+
+
+def _display_deployment(deployments, deployment_id):
+    deployment = deployments.get(deployment_id) or {}
+    return (
+        deployment.get("display_name")
+        or deployment.get("component_id")
+        or deployment_id
+    )
+
+
+def _reproduction_scope(paths, deployments, evidence_items, path_inputs):
+    """Describe source-observation and downstream evidence scope."""
+
+    normal_path_evidence = any(
+        str(item.get("proposition_id", "")).startswith(
+            (
+                "observation.end_to_end.normal_telemetry_chain.",
+                "observation.mosquitto_to_ditto.mqtt_normal_dataflow.",
+                "observation.ditto_to_influx.normal_event_write.",
+            )
+        )
+        for item in evidence_items
+    )
+    scopes = []
+    explicit_by_path = {
+        item["path_id"]: item["experimental_observation"]
+        for item in path_inputs
+        if isinstance(item, dict) and item.get("experimental_observation")
+    }
+    for path in paths:
+        observation = explicit_by_path.get(path["path_id"], {})
+        grades = dict(path.get("reproduction_grades") or {})
+        if observation:
+            grades.setdefault(observation["cve_id"], observation["source_observation_grade"])
+        steps = path.get("vulnerability_steps") or []
+        source_deployments = sorted({
+            step.get("deployment_id")
+            for step in steps
+            if step.get("deployment_id")
+        })
+        source_component = next(
+            (
+                str(step.get("component")).replace("_", " ").title()
+                for step in steps
+                if step.get("component")
+            ),
+            None,
+        )
+        if source_component is None and source_deployments:
+            source_component = _display_deployment(
+                deployments,
+                source_deployments[0],
+            )
+        if observation and not source_deployments:
+            source_deployments = [path["source_deployment_id"]]
+            source_component = _display_deployment(deployments, source_deployments[0])
+        for cve_id, grade in grades.items():
+            explicit_targets = (
+                observation.get("downstream_targets", {})
+                if observation.get("cve_id") == cve_id else {}
+            )
+            downstream_targets = []
+            for target_deployment in sorted({
+                transition.get("target_deployment_id")
+                for transition in path.get("transitions", [])
+                if transition.get("target_deployment_id")
+            }):
+                if target_deployment in source_deployments:
+                    continue
+                downstream_targets.append(
+                    {
+                        "target_deployment_id": target_deployment,
+                        "target_component": _display_deployment(
+                            deployments,
+                            target_deployment,
+                        ),
+                        "cve_specific_testing": explicit_targets.get(
+                            target_deployment, {}
+                        ).get("cve_specific_testing", "UNKNOWN"),
+                        "normal_path_testing": (
+                            "VERIFIED_NORMAL_PATH_ONLY"
+                            if normal_path_evidence and not observation
+                            else explicit_targets.get(target_deployment, {}).get(
+                                "normal_path_testing", "UNKNOWN"
+                            )
+                        ),
+                        **{
+                            key: value
+                            for key, value in explicit_targets.get(target_deployment, {}).items()
+                            if key in ("observation_window_utc", "supporting_artifact", "thing_id", "run_marker")
+                        },
+                    }
+                )
+            target_states = {target["cve_specific_testing"] for target in downstream_targets}
+            scopes.append(
+                {
+                    "path_id": path.get("path_id"),
+                    "cve_id": cve_id,
+                    "source_deployments": source_deployments,
+                    "source_component": source_component,
+                    "source_observation_grade": grade,
+                    "source_observation_label": (
+                        f"{grade} at {source_component}"
+                        if source_component
+                        else grade
+                    ),
+                    "downstream_targets": downstream_targets,
+                    "downstream_cve_specific_testing": (
+                        next(iter(target_states)) if len(target_states) == 1
+                        else "MIXED" if target_states else "NOT_APPLICABLE"
+                    ),
+                }
+            )
+    return scopes
+
+
+def _applicability_accounting(cve_assessments):
+    """Retain deployment-level applicability counts and reasons in JSON."""
+
+    accounting = []
+
+    for assessment in cve_assessments or []:
+        rows = _assessment_rows(assessment)
+        counts = {
+            "retrieved": len(rows),
+            "affected": 0,
+            "not_affected": 0,
+            "unknown": 0,
+            "skipped_or_invalid_status": 0,
+        }
+        reasons = []
+
+        for row in rows:
+            status = row.get("status")
+            if status == "AFFECTED":
+                counts["affected"] += 1
+            elif status == "NOT_AFFECTED":
+                counts["not_affected"] += 1
+            elif status == "UNKNOWN":
+                counts["unknown"] += 1
+            else:
+                counts["skipped_or_invalid_status"] += 1
+
+            reasons.append({
+                "cve_id": row.get("cve_id"),
+                "status": status,
+                "reason": row.get("reason"),
+            })
+
+        accounting.append({
+            "deployment_id": assessment.get("deployment_id"),
+            "component_id": assessment.get("component_id"),
+            "counts": counts,
+            "records": reasons,
+            "retrieval_status": (
+                assessment.get("retrieval") or {}
+            ).get("status"),
+        })
+
+    return accounting
 
 
 def _evidence_gaps(input_document):
@@ -1681,6 +2036,12 @@ def build_assessment(input_document, generated_at=None):
                 for path in assembled_paths
             ],
         })
+        result["reproduction_scope"] = _reproduction_scope(
+            result["paths"],
+            deployments,
+            evidence_items,
+            paths,
+        )
         scenario_results.append(result)
         for path_result in result["paths"]:
             target_profile = {
@@ -1817,6 +2178,11 @@ def build_assessment(input_document, generated_at=None):
     not_assessed = _build_not_assessed(
         cve_assessments,
         coverage,
+        scenarios_present=bool(scenarios),
+    )
+    not_assessed_groups = group_not_assessed(not_assessed)
+    applicability_accounting = _applicability_accounting(
+        cve_assessments
     )
     report = {
         "schema_version": SCHEMA_VERSION,
@@ -1840,7 +2206,10 @@ def build_assessment(input_document, generated_at=None):
         "system_profile": system,
         "target_profiles": target_profiles,
         "decision_trace": decision_trace,
+        "applicability_accounting": applicability_accounting,
+        "cvss_reporting": _cvss_reporting(cve_assessments),
         "not_assessed_cves": not_assessed,
+        "not_assessed_groups": not_assessed_groups,
         "scenario_errors": scenario_errors,
         "input_errors": deployment_errors + attacker_errors,
         "evidence_gaps": _evidence_gaps(document),
@@ -1997,6 +2366,48 @@ def replay_assessment(report_or_path, generated_at=None):
     return replayed
 
 
+def _print_cvss_reporting(report):
+    records = [
+        record
+        for record in report.get("cvss_reporting", [])
+        if record.get("applicability_status") == "AFFECTED"
+    ]
+    if not records:
+        return
+
+    print()
+    print("CVSS Selection Summary")
+    print("----------------------")
+    print(
+        "Policy: preserve all metrics; select the NVD Primary source, "
+        "then prefer CVSS v3.1 over v3.0."
+    )
+    for record in records:
+        print(f"{record['cve_id']} [{record['applicability_status']}]")
+        selected = record.get("selected")
+        if selected is None:
+            print("  Selected: none (no usable CVSS v3.x score)")
+        else:
+            print(
+                "  Selected: "
+                f"CVSS {selected['version']} | "
+                f"{selected['score']} | "
+                f"{selected.get('source') or 'UNKNOWN'} | "
+                f"{selected.get('source_type') or 'UNKNOWN'}"
+            )
+        for alternative in record.get(
+            "score_differing_alternatives",
+            [],
+        ):
+            print(
+                "  Alternative: "
+                f"CVSS {alternative['version']} | "
+                f"{alternative['score']} | "
+                f"{alternative.get('source') or 'UNKNOWN'} | "
+                f"{alternative.get('source_type') or 'UNKNOWN'}"
+            )
+
+
 def print_assessment_summary(report):
     """Print the decision-relevant EBSR result without inventing a score."""
 
@@ -2005,12 +2416,18 @@ def print_assessment_summary(report):
     print("==================================")
     print(f"Schema version: {report['schema_version']}")
     print(f"Assessment version: {report['assessment_version']}")
+    _print_cvss_reporting(report)
 
     if not report["scenario_results"]:
         print("Scenario result: NOT_ASSESSED")
         print(
             "Reason: no complete, evidence-backed scenario definition "
             "was available."
+        )
+        print(
+            "To provide explicit scenario evidence, run: "
+            "python main.py --ebsr-scenarios <path> "
+            "--ebsr-out <path>"
         )
     else:
         for result in report["scenario_results"]:
@@ -2033,6 +2450,26 @@ def print_assessment_summary(report):
                 "  Transition types: "
                 f"{', '.join(result['transition_types'])}"
             )
+            for scope in result.get("reproduction_scope", []):
+                print(
+                    "  Source observation: "
+                    f"{scope.get('source_observation_label')}"
+                )
+                for downstream in scope.get(
+                    "downstream_targets",
+                    [],
+                ):
+                    print(
+                        "  CVE-specific downstream testing for "
+                        f"{downstream['target_component']}: "
+                        f"{downstream['cve_specific_testing']}"
+                    )
+                    print(
+                        ("  Normal-path testing only: "
+                         if downstream["normal_path_testing"] == "VERIFIED_NORMAL_PATH_ONLY"
+                         else "  Normal-path testing: ")
+                        + downstream["normal_path_testing"]
+                    )
 
     for profile in report["component_profiles"]:
         print()
@@ -2052,12 +2489,24 @@ def print_assessment_summary(report):
 
     if report["not_assessed_cves"]:
         print()
-        print("NOT_ASSESSED CVE records")
-        print("-----------------------")
-        for record in report["not_assessed_cves"]:
+        print("NOT_ASSESSED CVE records grouped by applicability")
+        print("-----------------------------------------------")
+        groups = report.get(
+            "not_assessed_groups"
+        ) or group_not_assessed(report["not_assessed_cves"])
+
+        for group in groups:
             print(
-                f" - {record['deployment_id']} / {record['cve_id']}: "
-                f"{record['reason']}"
+                f"{group['applicability_status']} "
+                f"({group['count']} record"
+                f"{'' if group['count'] == 1 else 's'})"
+            )
+            print(
+                f"  Reason: {group['reason']}"
+            )
+            print(
+                "  CVEs: "
+                + ", ".join(group["cve_ids"])
             )
 
     if report["scenario_errors"]:
